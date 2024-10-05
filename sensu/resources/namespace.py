@@ -2,33 +2,30 @@
 A module to represent a Sensu namespace resource
 """
 
-from sensu.resources.base import Base
+from sensu.resources.base import ResourceBase, CallData
+from sensu.exception import SensuClientError
 
-class Namespace(Base):
+class Namespace(ResourceBase):
     """
     A class to represent a Sensu namespace resource
     """
 
-#    def instantiate_resources(data):
-#        """
-#        Create list of objects based of provided data
-#        """
-#        for item in data:
-#            yield Namespace(item)
+    VALID_FIELDS = ("name",)
 
-    def __init__(self, data=None):
+    def __init__(self, fields=None, client=None):
         """
         Initialize a new Sensu namespace resource.
 
         :param data: The data for the namespace.
         """
 
-        data = data or {}
+        fields = fields or {}
 
         self.base_url = "/api/core/v2/namespaces"
-        self.data = {}
+        self.fields = {}
+        self.client = client
 
-        self.data['name'] = data.get("name")
+        self.fields['name'] = fields.get("name")
 
     def get_data(self) -> dict:
         """
@@ -37,10 +34,34 @@ class Namespace(Base):
         :return: The URL for the namespace resource.
         """
 
-        if self.data['name'] is None:
-            return {"url": self.base_url, "data": None}
+        if self.fields['name'] is None:
+            return {"url": self.base_url, "fields": None}
         else:
-            return {"url": f"{self.base_url}/{self.data['name']}", "data": None}
+            return {"url": f"{self.base_url}/{self.fields['name']}", "fields": {"name": self.fields['name']}}
+
+    def create(self):
+        """
+        Create namespace resource.
+        """
+
+        if not self.client:
+            raise SensuClientError("Could not create namespace without a client")
+
+        return self.client.resource_put(CallData(resource=self))
+
+    create_or_update = create
+
+    def delete(self):
+        """
+        Delete namespace resource.
+        """
+
+        if not self.client:
+            raise SensuClientError("Could not delete namespace without a client")
+
+        self.client.resource_delete(CallData(resource=self))
+
+        return True
 
     def __str__(self):
         """
@@ -49,4 +70,4 @@ class Namespace(Base):
         :return: The namespace name.
         """
 
-        return str(self.data)
+        return str(self.fields)

@@ -6,6 +6,13 @@ class SensuConnectionError(SensuError):
     pass
 
 
+class SensuClientError(SensuError):
+    """
+    Indicates that the client is not properly configured, or missing.
+    """
+    pass
+
+
 class SensuAuthError(SensuError):
     pass
 
@@ -27,5 +34,22 @@ class SensuNeedLogin(SensuError):
 class SensuIncompleteError(SensuError):
     """
     Indicates that a given resource was incomplete when trying to be used
+    """
+    pass
+
+class SensuResourceError(SensuError):
+    """
+    A generic error for resource operations
+    """
+
+class SensuResourceMissingError(SensuResourceError):
+    """
+    Indicates that a resource is missing
+    """
+    pass
+
+class SensuResourceExistsError(SensuResourceError):
+    """
+    Indicates that a resource unexpectedly exists
     """
     pass

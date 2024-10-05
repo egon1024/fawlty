@@ -168,3 +168,4 @@ cython_debug/
 # Misc files
 test.py
 .python-version
+.vscode

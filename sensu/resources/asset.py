@@ -2,14 +2,16 @@
 A module to represent a Sensu asset resource
 """
 
-from sensu.resources.base import Base
+from copy import deepcopy
 
-class Asset(Base):
+from sensu.resources.base import ResourceBase, CallData
+
+class Asset(ResourceBase):
     """
     A class to represent a Sensu asset resource
     """
 
-    FIELDS = (
+    VALID_FIELDS = (
         "url",
         "sha512",
         "filters",
@@ -18,31 +20,37 @@ class Asset(Base):
         "headers"
     )
 
-    def __init__(self, data=None):
+    def __init__(self, fields=None, client=None):
         """
         Initialize a new Sensu asset resource.
 
         :param data: The data for the asset.
         """
 
-        data = data or {}
-        self.data = {}
+        fields = fields or {}
+        self.fields = {
+            "metadata": {},
+            "headers": {},
+            "filters": [],
+        }
+        self.client = client
 
-        namepsace = None
-        if 'namespace' in data:
-            namespace = data['namespace']
-        elif 'metadata' in data and 'namespace' in data['metadata']:
-            namespace = data['metadata']['namespace']
+        namespace = None
+        if "namespace" in fields:
+            namespace = fields["namespace"]
+
+        elif "metadata" in fields and "namespace" in fields["metadata"]:
+            namespace = fields["metadata"]["namespace"]
 
         if namespace is None:
             raise ValueError("Namespace is required for asset")
 
-        self.data['namespace'] = namespace
+        self.fields["namespace"] = namespace
 
-        self.base_url = f"/api/core/v2/namespaces/{self.data['namespace']}/assets"
+        self.base_url = f"/api/core/v2/namespaces/{self.fields["namespace"]}/assets"
 
-        for field in self.FIELDS:
-            self.data[field] = data.get(field)
+        for field in self.VALID_FIELDS:
+            self.fields[field] = fields.get(field, self.fields.get(field))
 
     def get_data(self) -> dict:
         """
@@ -51,11 +59,67 @@ class Asset(Base):
         :return: The URL for the asset resource.
         """
 
-        if not self.data['metadata'] or not self.data['metadata'].get("name"):
-            return {"url": self.base_url, "data": None}
+        if not self.fields["metadata"] or not self.fields["metadata"].get("name"):
+            return {"url": self.base_url, "fields": None}
         
+        call_data = {"url": f"{self.base_url}/{self.fields["metadata"]["name"]}", "fields": deepcopy(self.fields)}
+
+        # Some fields don't get sent to the API, they are only expected to be returned
+        del call_data["fields"]["builds"]
+
+        if "created_by" in call_data["fields"]["metadata"]:
+            del call_data["fields"]["metadata"]["created_by"]
+
+        return call_data
+
+    def create_or_update(self):
+        """
+        Create or update asset resource.
+        """
+
+        if not self.client:
+            raise SensuClientError("Could not create asset without a client")
+
+        if not self.fields["metadata"] or not self.fields["metadata"].get("name"):
+            raise ValueError("Asset metadata name is required to create a new asset")
+
+        call_data = CallData(resource=self)
+
+        return self.client.resource_put(call_data)
+
+    def create(self):
+        """
+        Create new asset resource.
+        """
+
+        if not self.client:
+            raise SensuClientError("Could not create asset without a client")
+
+        # Check if it already exists
+        call_data = CallData(resource=self)
+        try:
+            self.client.resource_get(call_data)
+        except SensuResourceMissingError:
+            pass
         else:
-            return {"url": f"{self.base_url}/{self.data['metadata']['name']}", "data": None}
+            raise SensuResourceExistsError("Asset already exists")
+
+        return self.create_or_update()
+
+    def delete(self):
+        """
+        Delete asset resource.
+        """
+
+        if not self.client:
+            raise SensuClientError("Could not delete asset without a client")
+
+        if not self.fields["metadata"] or not self.fields["metadata"].get("name"):
+            raise ValueError("Asset metadata name is required to delete an asset")
+
+        self.client.resource_delete(CallData(resource=self))
+
+        return True
 
     def __str__(self):
         """
@@ -64,4 +128,4 @@ class Asset(Base):
         :return: The asset name.
         """
 
-        return str(self.data)
+        return str(self.fields)
