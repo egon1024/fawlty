@@ -132,6 +132,9 @@ class Role(ResourceBase):
         if not self.client:
             raise SensuClientError("Could not delete role without a client")
 
+        if not self.fields["metadata"]["name"]:
+            raise ValueError("Role name is required")
+
         return self.client.resource_delete(CallData(resource=self))
 
 

@@ -25,7 +25,6 @@ class ClusterRole(ResourceBase):
         "created_by"
     )
 
-
     def __init__(self, fields=None, name=None, client=None):
         """
         Initialize a new Sensu role resource.
