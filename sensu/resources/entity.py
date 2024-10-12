@@ -106,6 +106,80 @@ class Entity(ResourceBase):
             return {"url": self.base_url, "fields": None}
 
         field_data = deepcopy(self.fields)
+
+        # The only time we need get_data is for interacting with the API.  We only want the data relevant to the API to be available here
+
+        keep_fields = ("entity_class", "sensu_agent_version", "subscriptions", "deregister", "deregistration", "metadata", "redact")
+
+        for field in list(field_data.keys()):
+            if field not in keep_fields:
+                del field_data[field]
+
         return {"url": f"{self.base_url}/{self.fields['metadata']['name']}", "fields": field_data}
 
+    def create_or_update(self):
+        """
+        Create or update the entity resource.
+        """
+
+        data = self.get_data()
+
+        if data["fields"] is None:
+            raise SensuClientError("Entity name is required")
+
+        return self.client.resource_put(CallData(resource=self))
     
+    def create(self):
+        """
+        Create the entity resource.
+        """
+
+        data = self.get_data()
+
+        if data["fields"] is None:
+            raise SensuClientError("Entity name is required")
+
+        # Check if the entity already exists
+        try:
+            self.client.resource_get(CallData(resource=self))
+            raise SensuResourceExistsError(f"Entity {self.fields['metadata']['name']} already exists")
+        except SensuResourceMissingError:
+            pass
+
+        return self.client.resource_post(CallData(resource=self))
+
+    def update(self):
+        """
+        Update the entity resource.
+        """
+
+        data = self.get_data()
+
+        if data["fields"] is None:
+            raise SensuClientError("Entity name is required")
+
+        # Check if the entity exists and fail if not
+        try:
+            self.client.resource_get(CallData(resource=self))
+        except SensuResourceMissingError:
+            raise SensuResourceMissingError(f"Entity {self.fields['metadata']['name']} does not exist")
+
+        return self.client.resource_put(CallData(resource=self))
+
+    def delete(self):
+        """
+        Delete the entity resource.
+        """
+
+        data = self.get_data()
+
+        if data["fields"] is None:
+            raise SensuClientError("Entity name is required")
+
+        # Check if the entity exists and fail if not
+        try:
+            self.client.resource_get(CallData(resource=self))
+        except SensuResourceMissingError:
+            raise SensuResourceMissingError(f"Entity {self.fields['metadata']['name']} does not exist")
+
+        return self.client.resource_delete(CallData(resource=self))
