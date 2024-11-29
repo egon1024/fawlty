@@ -96,7 +96,8 @@ class Filter(ResourceBase):
         """
 
         data = self.get_data()
-        if data["fields"] is None:
+
+        if not data["fields"]["metadata"].get("name"):
             raise SensuResourceMissingError("Filter name is required")
 
         return self.client.resource_put(CallData(resource=self))
@@ -109,7 +110,8 @@ class Filter(ResourceBase):
         """
 
         data = self.get_data()
-        if data["fields"] is None:
+
+        if not data["fields"]["metadata"].get("name"):
             raise SensuResourceMissingError("Filter name is required")
 
         # Check if the filter already exists
@@ -126,7 +128,8 @@ class Filter(ResourceBase):
         """
 
         data = self.get_data()
-        if data["fields"] is None:
+
+        if not data["fields"]["metadata"].get("name"):
             raise SensuResourceMissingError("Filter name is required")
 
         # Check if the filter exists
@@ -143,7 +146,7 @@ class Filter(ResourceBase):
         """
 
         data = self.get_data()
-        if data["fields"] is None:
+        if not data["fields"]["metadata"].get("name"):
             raise SensuResourceMissingError("Filter name is required")
 
         return self.client.resource_delete(CallData(resource=self))
