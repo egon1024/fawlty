@@ -11,8 +11,8 @@ import requests
 from pydantic import ValidationError
 
 # Our imports
-from sensu.sensu_token import SensuToken
-from sensu.exception import (
+from fawlty.sensu_token import SensuToken
+from fawlty.exception import (
     SensuConnectionError, SensuNeedRefresh,
     SensuAuthError, SensuNeedLogin,
     SensuResourceError, SensuResourceMissingError, SensuError

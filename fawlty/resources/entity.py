@@ -5,7 +5,7 @@ A module to represent a Sensu entity resource
 from typing import Optional, List, Dict, Literal, Any
 
 # Our imports
-from sensu.resources.base import ResourceBase
+from sensu.resources.base import ResourceBase, MetadataWithNamespace
 from sensu.client import SensuClient
 
 # 3rd party imports
@@ -26,16 +26,10 @@ def get_url(namespace: str, name: str = None) -> str:
     return url
 
 
-class EntityMetadata(BaseModel):
+class EntityMetadata(MetadataWithNamespace):
     """
     A class to represent the data structure of a cluster-role metadata
     """
-    name: str
-    namespace: str
-    created_by: Optional[str] = None
-    labels: Optional[dict[str, str]] = {}
-    annotations: Optional[dict[str, str]] = {}
-
 
 
 class Entity(ResourceBase):

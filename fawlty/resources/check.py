@@ -7,7 +7,7 @@ import re
 from typing import Optional, List, Dict, Literal
 
 # Our imports
-from sensu.resources.base import ResourceBase
+from sensu.resources.base import ResourceBase, MetadataWithNamespace
 from sensu.client import SensuClient
 
 # 3rd party imports
@@ -29,15 +29,10 @@ def get_url(namespace: str, name: str = None) -> str:
     return url
 
 
-class CheckMetadata(BaseModel):
+class CheckMetadata(MetadataWithNamespace):
     """
     A class to represent the data structure of a check metadata
     """
-    name: str
-    namespace: str
-    created_by: Optional[str] = None
-    labels: Optional[dict[str, str]] = {}
-    annotations: Optional[dict[str, str]] = {}
 
 
 class MetricTag(BaseModel):

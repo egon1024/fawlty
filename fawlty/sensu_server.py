@@ -4,7 +4,7 @@ A module to represent the connection information to a Sensu server API
 
 from pydantic import BaseModel, computed_field
 
-class Server(BaseModel):
+class SensuServer(BaseModel):
     """
     A class to represent the connection information to a Sensu server API
     """

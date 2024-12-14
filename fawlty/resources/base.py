@@ -2,6 +2,9 @@
 A module containing a base class to use for Sensu resource objects
 """
 
+# Built in imports
+from typing import Optional, Dict
+
 # Our imports
 from sensu.exception import SensuClientError
 from sensu.client import SensuClient
@@ -61,3 +64,22 @@ class ResourceBase(BaseModel):
             raise SensuClientError(f"Could not delete '{self.__class__.__name__}' object without a client")
 
         return self._sensu_client.resource_delete(obj=self)
+
+class MetadataWithoutNamespace(BaseModel):
+    """
+    A class to represent the data structure of a metadata
+    """
+    name: str
+    created_by: Optional[str] = None
+    labels: Optional[Dict[str, str]] = {}
+    annotations: Optional[Dict[str, str]] = {}
+
+class MetadataWithNamespace(BaseModel):
+    """
+    A class to represent the data structure of a metadata
+    """
+    name: str
+    namespace: str
+    created_by: Optional[str] = None
+    labels: Optional[Dict[str, str]] = {}
+    annotations: Optional[Dict[str, str]] = {}

@@ -6,7 +6,7 @@ A module to represent a Sensu clusterrole resource
 from typing import Optional, List, Dict, Literal
 
 # Our imports
-from sensu.resources.base import ResourceBase
+from sensu.resources.base import ResourceBase, MetadataWithoutNamespace
 from sensu.client import SensuClient
 
 # 3rd party imports
@@ -28,14 +28,10 @@ def get_url(name: str = None) -> str:
     return url
 
 
-class ClusterRoleMetadata(BaseModel):
+class ClusterRoleMetadata(MetadataWithoutNamespace):
     """
     A class to represent the data structure of a cluster-role metadata
     """
-    name: str
-    created_by: Optional[str] = None
-    labels: Optional[dict[str, str]] = {}
-    annotations: Optional[dict[str, str]] = {}
 
 
 class ClusterRoleRule(BaseModel):
