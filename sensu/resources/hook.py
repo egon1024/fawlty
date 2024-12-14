@@ -1,5 +1,5 @@
 """
-A module to represent a Sensu filter resource
+A module for Sensu hook resources.
 """
 
 # Built in imports
@@ -10,14 +10,14 @@ from sensu.resources.base import ResourceBase
 from sensu.client import SensuClient
 
 # 3rd party imports
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, model_validator
 
 # Constants
-BASE_URL = "/api/core/v2/namespaces/{namespace}/filters"
+BASE_URL = "/api/core/v2/namespaces/{namespace}/hooks"
 
 def get_url(namespace: str, name: str = None) -> str:
     """
-    Get a url to retrieve a list of matching filter resources.
+    Get a url to retrieve a list of matching hook resources.
     """
 
     url = BASE_URL.format(namespace=namespace)
@@ -27,9 +27,9 @@ def get_url(namespace: str, name: str = None) -> str:
     return url
 
 
-class FilterMetadata(BaseModel):
+class HookMetadata(BaseModel):
     """
-    A class to represent the data structure of a filter metadata
+    A class to represent the data structure of a hook metadata
     """
     name: str
     namespace: str
@@ -38,21 +38,21 @@ class FilterMetadata(BaseModel):
     annotations: Optional[dict[str, str]] = {}
 
 
-class Filter(ResourceBase):
+class Hook(ResourceBase):
     """
-    A class to represent a Sensu filter resource
+    A class to represent a Sensu hook resource.
     """
-
-    action: Literal["allow", "deny"]
-    expressions: List[str] = []
-    runtime_assets: Optional[List[str]] = []
-    metadata: FilterMetadata
+    command: str
+    runtime_assets: Optional[List[str]] = None
+    stdin: Optional[bool] = False
+    timeout: Optional[int] = 60
+    metadata: HookMetadata
 
     def urlify(self, purpose: str=None) -> str:
         """
-        Return the URL for the filter resource(s).
+        Return the URL for the hook resource(s).
 
-        :return: The URL for the filter resource.
+        :return: The URL for the hook resource.
         """
 
         url = BASE_URL.format(namespace=self.metadata.namespace)

@@ -1,211 +1,171 @@
 """
 A module to represent a Sensu user resource
 """
+# Built in imports
+from typing import Optional, List
 
-from sensu.resources.base import ResourceBase, CallData
-from sensu.exception import SensuClientError, SensuResourceMissingError, SensuResourceExistsError
+# Our imports
+from sensu.resources.base import ResourceBase
+from sensu.client import SensuClient
+
+# 3rd party imports
+from pydantic import validator
+import bcrypt
+
+# Constants
+BASE_URL = "/api/core/v2/users"
+
+def get_url(name: str = None) -> str:
+    """
+    Get a url to retrieve a list of matching user resources.
+    """
+
+    url = BASE_URL
+    if name is not None:
+        url += f"/{name}"
+    
+    return url
+
+def hash_password(passwd: str) -> str:
+    """
+    Takes a password and switches it to a hashed form for use in Sensu
+    """
+
+    bytes = passwd.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hash = bcrypt.hashpw(bytes, salt)
+    hashed_str = hash.decode('utf-8')
+
+    return hashed_str
+
+
+class UserPasswordReset(ResourceBase):
+    """
+    This is a special class being used to represent the structure and URL specifically
+    for the purpose of performing a password reset.
+    """
+    username: str
+    password_hash: str
+    _sensu_client: Optional[SensuClient] = None
+
+    def urlify(self, purpose: str=None) -> str:
+        """
+        Provide the url for reseting the user's password
+        """
+
+        # We ignore the purpose field - it's only present to preserve the
+        # method signature
+
+        return BASE_URL + f"/{self.username}/reset_password"
+
+
+class ChangePassword(ResourceBase):
+    """
+    This is a special class being used to represent the structure and URL specifically
+    for the purpose of a user to update their own password
+    """
+    username: str
+    password: str
+    password_hash: str
+    _sensu_client: Optional[SensuClient] = None
+
+    def urlify(self, purpose: str=None) -> str:
+        """
+        Provide the url for reseting the user's password
+        """
+
+        # We ignore the purpose field - it's only present to preserve the
+        # method signature
+
+        return BASE_URL + f"/{self.username}/password"
+
+
 
 class User(ResourceBase):
     """
     A class to represent a Sensu user resource
-
-    Methods:
-        create: Create the user resource.
-        create_or_update: Create or update the user resource.
-        update: Update the user resource.
-        disable: Disable the user.
-        reinstate: Reinstate the user.
-        reset_password: Change the user's password without knowing the current one.
     """
 
-    VALID_FIELDS = (
-        "username",
-        "groups",
-        "password",
-        "disabled",
-    )
+    username: str
+    groups: List[str]
+    disabled: bool
+    password: Optional[str] = None
+    _sensu_client: Optional[SensuClient] = None
 
-    def __init__(self, fields=None, client=None):
+    @validator("password")
+    def validate_password(cls, value):
+        if value is not None and len(value) < 8:
+            raise ValueError ("Password must be at least 8 characters long")
+        return value
+
+    def urlify(self, purpose: str=None) -> str:
         """
-        Initialize a new Sensu user resource.
-
-        :param fields: The fields for the user.
-        """
-
-        fields = fields or {}
-        self.fields = {}
-        self.client = client
-
-        self.base_url = "/api/core/v2/users"
-
-        for field in self.VALID_FIELDS:
-            if field not in fields:
-                self.fields[field] = None
-            else:
-                self.fields[field] = fields[field]
-
-    def get_data(self) -> dict:
-        """
-        Return the URL for getting the user resource(s).
+        Return the URL for the user resource.
 
         :return: The URL for the user resource.
         """
 
-        if self.fields['username'] is None:
-            return {"url": self.base_url, "fields": None}
-        else:
-            return {"url": f"{self.base_url}/{self.fields['username']}", "fields": self.fields}
+        url = BASE_URL
 
-    def create(self):
-        """
-        Create the user resource.
+        if purpose != "create":
+            url += f"/{self.username}"
 
-        Will fail if the user already exists.
-        """
-
-        if not self.client:
-            raise SensuClientError("Could not create user without a client")
-
-        call_data = CallData(resource=self)
-
-        try:
-            self.client.resource_get(call_data)
-        except SensuResourceMissingError:
-            pass
-        else:
-            raise SensuResourceExistsError("User already exists")
-
-        self.create_or_update()
-
-    def update(self):
-        """
-        Update the user resource.
-
-        Will fail if the user does not exist.
-        """
-
-        if not self.client:
-            raise SensuClientError("Could not update user without a client")
-
-        call_data = CallData(resource=self)
-        try:
-            self.client.resource_get(call_data)
-        except SensuResourceMissingError:
-            raise SensuResourceMissingError("User does not exist")
-
-        if self['password'] is not None:
-            return self.create_or_update()
-
-        else:
-            return self.update_no_password()
-
-    def create_or_update(self):
-        """
-        Create or update the user resource.
-        """
-
-        if not self.client:
-            raise SensuClientError("Could not create user without a client")
-
-        # If there's no password, this can only be an updatte
-        if self['password'] is None:
-            return self.update_no_password()
-
-        else:
-            return self.client.resource_put(CallData(resource=self))
-
-    def update_no_password(self):
-        """
-        Update the user resource, but we don't have access to the password.
-        """
-
-        # Start with the user's status
-        if not self['disabled']:
-            self.reinstate()
-        else:
-            self.disable()
-
-        # Find out what groups they are in so we can make it match
-        live_user = list(self.client.resource_get(CallData(resource=self)))[0]
-        current_groups = live_user['groups']
-
-        if self['groups'] is not None:
-            for group in self["groups"]:
-                if group not in current_groups:
-                    call_data = CallData(resource=self)
-                    call_data.url = f"{self.base_url}/{self['username']}/groups/{group}"
-                    self.client.resource_put(call_data)
-
-        if current_groups is not None:
-            for group in current_groups:
-                if group not in self["groups"]:
-                    call_data = CallData(resource=self)
-                    call_data.url = f"{self.base_url}/{self['username']}/groups/{group}"
-                    self.client.resource_delete(call_data)
-
-        return list(self.client.resource_get(CallData(resource=self)))[0]
+        return url
 
     def disable(self):
         """
-        Disable the user.
+        Marks the user as disabled
         """
 
-        if not self.client:
-            raise SensuClientError("Could not create user without a client")
+        self.delete()
 
-        self.client.resource_delete(self)
-        self["disabled"] = True
+    def reset_password(self, new_password: str):
+        """
+        Cause the user's password to be reset
+        """
 
-        return list(self.instantiate_resources(data=[self.fields], client=self.client))[0]
-    
+        if not self._sensu_client:
+            raise SensuClientError(f"Could not create '{self.__class__.__name__}' object without a client")
+
+        password_hash = hash_password(new_password)
+        reset_obj = UserPasswordReset(
+            username=self.username, password_hash=password_hash
+        )
+        reset_obj.set_client(self._sensu_client)
+
+        return reset_obj.update()
+
+    def change_password(self, old_password: str, new_password: str):
+        """
+        Update the user's own password.
+
+        Requires the current password to be provided, as well as the new one.
+        """
+
+        if not self._sensu_client:
+            raise SensuClientError(f"Could not create '{self.__class__.__name__}' object without a client")
+
+        password_hash = hash_password(new_password)
+        reset_obj = ChangePassword(
+            username=self.username,
+            password=old_password,
+            password_hash=password_hash
+        )
+        reset_obj.set_client(self._sensu_client)
+
+        return reset_obj.update()
+
     def reinstate(self):
         """
-        Reinstate the user.
+        Reinstates the user
         """
 
-        if not self.client:
-            raise SensuClientError("Could not create user without a client")
+        if not self._sensu_client:
+            raise SensuClientError(f"Could not create '{self.__class__.__name__}' object without a client")
 
-        call_data = CallData(resource=self)
-
-        try:
-            live = list(self.client.resource_get(call_data))[0]
-        except SensuResourceMissingError:
-            raise SensuResourceMissingError("User does not exist")
-
-        # If they're already enabled, no sense in making an API call
-        if not live['disabled']:
-            return live
-
-        call_data.url = f"{self.base_url}/{self.fields['username']}/reinstate"
-
-        return self.client.resource_put(call_data)
-
-    def reset_password(self):
-        """
-        Reset the user's password.
-
-        Does not require knowledge of the existing password to use.
-        """
-
-        if not self.client:
-            raise SensuClientError("Could not create user without a client")
-
-        data = {
-            "url": f"{self.base_url}/{self.fields['username']}/reset_password",
-            "fields": {
-                "username": self["username"],
-                "password": self["password"],
-            }
-        }
-
-        return self.client.resource_put(self, data)
-
-    def __str__(self):
-        """
-        Return the username.
-
-        :return: The username.
-        """
-
-        return str(self.fields)
+        result = self._sensu_client.resource_put(
+            obj=self,
+            url=BASE_URL + f"/{self.username}/reinstate"
+        )
+        if result:
+            self.disabled = False

@@ -1,185 +1,85 @@
 """
 A module to represent a Sensu entity resource
 """
+# Built in imports
+from typing import Optional, List, Dict, Literal, Any
 
-from copy import deepcopy
+# Our imports
+from sensu.resources.base import ResourceBase
+from sensu.client import SensuClient
 
-from sensu.resources.base import ResourceBase, CallData
-from sensu.exception import SensuClientError, SensuResourceMissingError, SensuResourceExistsError
+# 3rd party imports
+from pydantic import BaseModel, validator
+
+# Constants
+BASE_URL = "/api/core/v2/namespaces/{namespace}/entities"
+
+def get_url(namespace: str, name: str = None) -> str:
+    """
+    Get a url to retrieve a list of matching entity resources.
+    """
+
+    url = BASE_URL.format(namespace=namespace)
+    if name is not None:
+        url += f"/{name}"
+    
+    return url
+
+
+class EntityMetadata(BaseModel):
+    """
+    A class to represent the data structure of a cluster-role metadata
+    """
+    name: str
+    namespace: str
+    created_by: Optional[str] = None
+    labels: Optional[dict[str, str]] = {}
+    annotations: Optional[dict[str, str]] = {}
+
+
 
 class Entity(ResourceBase):
     """
     A class to represent a Sensu entity resource
     """
+    metadata: EntityMetadata
+    deregister: bool = False
+    entity_class: Literal["agent", "proxy", "service"]
+    deregistration: Optional[Dict[str, str]]
+    last_seen: Optional[int] = 0
+    redact: Optional[List[str]] = []
+    sensu_agent_version: str
+    subscriptions: List[str]
+    system: Optional[Dict[str, Any]] = None
+    user: Optional[str] = "agent"
 
-    VALID_FIELDS = (
-        "deregister",
-        "deregistration",
-        "entity_class",
-        "last_seen",
-        "redact",
-        "subscriptions",
-        "metadata",
-        "system",
-        "sensu_agent_version",
-        "user",
-    )
+    @validator("deregistration")
+    def validate_deregistration(cls, value):
 
-    METADATA_FIELDS = (
-        "name",
-        "namespace",
-        "labels",
-        "annotations",
-        "created_by"
-    )
+        # Allow an empty dictionary or None
+        if not value:
+            return value
 
-    DEREGISTRATION_FIELDS = (
-        "handler",
-        "timeout",
-    )
+        # Validate that there is exactly one key
+        if len(value) > 1:
+            raise ValueError("The 'deregistration' dictionary can contain at most one key.")
 
-    def __init__(self, fields=None, name=None, namespace=None, client=None):
+        # Validate that the only valid key is 'handler'
+        if "handler" not in value:
+            raise ValueError("The only valid key in 'deregistration' is 'handler'.")
+
+        return value
+
+    def urlify(self, purpose: str=None) -> str:
         """
-        Initialize a new Sensu entity resource.
+        Return the URL for the entity resource(s).
 
-        # TODO - fix this
-        :param data: The data for the entity.
-        """
-
-        fields = fields or {}
-        self.fields = {
-            "deregister": False,
-            "deregistration": {
-                "handler": None,
-                "timeout": None,
-            },
-            "entity_class": "agent",
-            "last_seen": None,
-            "redact": [],
-            "subscriptions": [],
-            "metadata": {
-                "name": None,
-                "namespace": None,
-                "labels": {},
-                "annotations": {},
-                "created_by": None,
-            },
-            "system": {},
-            "sensu_agent_version": None,
-            "user": None,
-        }
-        self.client = client
-
-        if "deregister" in fields:
-            self.fields["deregister"] = fields["deregister"]
-
-        if "deregistration" in fields:
-            for field in self.DEREGISTRATION_FIELDS:
-                self.fields["deregistration"][field] = fields["deregistration"].get(field, self.fields["deregistration"].get(field))
-
-        for field in ("entity_class", "last_seen", "redact", "subscriptions", "system", "sensu_agent_version", "user"):
-            if field in fields:
-                self.fields[field] = fields[field]
-
-        if "metadata" in fields:
-            for field in self.METADATA_FIELDS:
-                self.fields["metadata"][field] = fields["metadata"].get(field, self.fields["metadata"].get(field))
-
-        # Some helpers to simplify instantiation
-        if name is not None:
-            self.fields["metadata"]["name"] = name
-
-        if namespace is not None:
-            self.fields["metadata"]["namespace"] = namespace
-
-        if not self.fields["metadata"]["namespace"]:
-            raise ValueError("Namespace is required for entity")
-        
-        self.base_url = f"/api/core/v2/namespaces/{self.fields['metadata']['namespace']}/entities"
-
-    def get_data(self) -> dict:
-        """
-        Return the URL and field data for the entity resource.
+        :return: The URL for the entity resource.
         """
 
-        if self.fields['metadata']['name'] is None:
-            return {"url": self.base_url, "fields": None}
+        url = BASE_URL.format(namespace=self.metadata.namespace)
 
-        field_data = deepcopy(self.fields)
+        if purpose != "create":
+            url += f"/{self.metadata.name}"
 
-        # The only time we need get_data is for interacting with the API.  We only want the data relevant to the API to be available here
-
-        keep_fields = ("entity_class", "sensu_agent_version", "subscriptions", "deregister", "deregistration", "metadata", "redact")
-
-        for field in list(field_data.keys()):
-            if field not in keep_fields:
-                del field_data[field]
-
-        return {"url": f"{self.base_url}/{self.fields['metadata']['name']}", "fields": field_data}
-
-    def create_or_update(self):
-        """
-        Create or update the entity resource.
-        """
-
-        data = self.get_data()
-
-        if data["fields"] is None:
-            raise SensuClientError("Entity name is required")
-
-        return self.client.resource_put(CallData(resource=self))
-    
-    def create(self):
-        """
-        Create the entity resource.
-        """
-
-        data = self.get_data()
-
-        if data["fields"] is None:
-            raise SensuClientError("Entity name is required")
-
-        # Check if the entity already exists
-        try:
-            self.client.resource_get(CallData(resource=self))
-            raise SensuResourceExistsError(f"Entity {self.fields['metadata']['name']} already exists")
-        except SensuResourceMissingError:
-            pass
-
-        return self.client.resource_post(CallData(resource=self))
-
-    def update(self):
-        """
-        Update the entity resource.
-        """
-
-        data = self.get_data()
-
-        if data["fields"] is None:
-            raise SensuClientError("Entity name is required")
-
-        # Check if the entity exists and fail if not
-        try:
-            self.client.resource_get(CallData(resource=self))
-        except SensuResourceMissingError:
-            raise SensuResourceMissingError(f"Entity {self.fields['metadata']['name']} does not exist")
-
-        return self.client.resource_put(CallData(resource=self))
-
-    def delete(self):
-        """
-        Delete the entity resource.
-        """
-
-        data = self.get_data()
-
-        if data["fields"] is None:
-            raise SensuClientError("Entity name is required")
-
-        # Check if the entity exists and fail if not
-        try:
-            self.client.resource_get(CallData(resource=self))
-        except SensuResourceMissingError:
-            raise SensuResourceMissingError(f"Entity {self.fields['metadata']['name']} does not exist")
-
-        return self.client.resource_delete(CallData(resource=self))
+        return url

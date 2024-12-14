@@ -2,40 +2,32 @@
 A module to represent the connection information to a Sensu server API
 """
 
-class Server(object):
+from pydantic import BaseModel, computed_field
+
+class Server(BaseModel):
     """
     A class to represent the connection information to a Sensu server API
     """
 
-    def __init__(self, host, port, use_ssl=False, ignore_cert=False):
-        """
-        Initialize a new Sensu server connection.
+    host: str
+    port: int = 8080
+    use_ssl: bool = False
+    ignore_cert: bool = False
 
-        :param host: The hostname or IP address of the server.
-        :param port: The port number of the server.
-        :param use_ssl: Whether to use SSL for the connection (default is False).
-        :param ignore_cert: Whether to ignore SSL certificate validation (default is False).
-        """
-        self.host = host
-        self.port = port
-        self.use_ssl = use_ssl
-        self.ignore_cert = ignore_cert
-        self.api_url = f"http{'s' if use_ssl else ''}://{host}:{port}"
-
-
-    def __str__(self):
+    @computed_field
+    @property
+    def api_url(self) -> str:
         """
         Return the API URL.
 
         :return: The API URL.
         """
-        return self.api_url
+        return f"http{'s' if self.use_ssl else ''}://{self.host}:{self.port}"
 
 
-    def __repr__(self):
+    def urlify(self) -> str:
         """
-        Return the API URL.
-
-        :return: The API URL.
+        Just a base class placeholder to help remind subclasses to implement this method.
         """
-        return self.api_url
+        
+        raise NotImplementedError("Subclasses must implement this method")

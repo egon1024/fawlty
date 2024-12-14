@@ -2,84 +2,62 @@
 A module containing a base class to use for Sensu resource objects
 """
 
-from typing import Any
+# Our imports
+from sensu.exception import SensuClientError
+from sensu.client import SensuClient
 
+# 3rd party imports
+from pydantic import BaseModel
 
-class ResourceBase(object):
+###
+# TODO:
+#
+# Track whether the object has been changed since last write to the sensu
+# server (dirty = T/F perhaps?).  Write ops would be noops if dirty == F. 
+# "Force" flag to override
+#
+###
+
+class ResourceBase(BaseModel):
     """
     A Base class to use for Sensu resource objects
     """
 
-    @classmethod
-    def instantiate_resources(cls, data, client=None):
+    def set_client(self, client: SensuClient):
         """
-        Create list of objects based on provided data
+        Sets the sensu client for the object
         """
-        for item in data:
-            yield cls(item, client=client)
+        self._sensu_client = client
 
 
-    def __getitem__(self, name):
+    def create(self) -> bool:
         """
-        Get an attribute from "data"
+        Create resource.
         """
 
-        return self.fields.get(name)
+        if not self._sensu_client:
+            raise SensuClientError(f"Could not create '{self.__class__.__name__}' object without a client")
+
+        return self._sensu_client.resource_post(obj=self)
 
 
-    def __setitem__(self, name, value):
+    def update(self) -> bool:
         """
-        Set an attribute in "data"
-        """
-
-        if name not in self.VALID_FIELDS:
-            raise IndexError(f"'{type(self).__name__}' object has no element '{name}'")
-
-        self.fields[name] = value
-
-
-class CallData(object):
-    """
-    A class to represent the data for an API call.  It will derive the needed data from a combination of a ResourceBase object, a url, and fields, as necessary.
-    """
-
-    def __init__(self, resource=None, url=None, fields=None):
-        """
-        Initialize a new CallData object.
+        Update resource.
         """
 
-        self.resource = resource
+        if not self._sensu_client:
+            raise SensuClientError(f"Could not update '{self.__class__.__name__}' object without a client")
 
-        if url is None and resource is None:
-            raise ValueError("Either 'resource' or 'url' must be provided")
+        return self._sensu_client.resource_put(obj=self)
 
-        self.url = url or resource.get_data()["url"]
 
-        if fields is not None:
-            self.fields = fields
-        elif resource is not None:
-            self.fields = resource.get_data()["fields"]
-
-    def __getitem__(self, name):
+    def delete(self) -> bool:
         """
-        Get an attribute from "data"
+        Delete namespace resource.
         """
 
-        if name == "url":
-            return self.url
-        elif name == "fields":
-            return self.fields
-        elif name == "resource":
-            return self.resource
+        if not self._sensu_client:
+            raise SensuClientError(f"Could not delete '{self.__class__.__name__}' object without a client")
 
-    def __setitem__(self, name, value):
-        """
-        Set an attribute in "data"
-        """
-
-        if name == "url":
-            self.url = value
-        elif name == "fields":
-            self.fields = value
-        elif name == "resource":
-            self.resource = value
+        return self._sensu_client.resource_delete(obj=self)

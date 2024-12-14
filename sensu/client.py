@@ -8,11 +8,22 @@ from pprint import pformat
 
 # 3rd party imports
 import requests
+from pydantic import ValidationError
 
 # Our imports
-from sensu.token import Token, token_from_dict
-from sensu.exception import SensuConnectionError, SensuNeedRefresh, SensuAuthError, SensuNeedLogin, SensuResourceMissingError, SensuError
-from sensu.resources.base import ResourceBase, CallData
+from sensu.sensu_token import SensuToken
+from sensu.exception import (
+    SensuConnectionError, SensuNeedRefresh,
+    SensuAuthError, SensuNeedLogin,
+    SensuResourceError, SensuResourceMissingError, SensuError
+)
+
+def debug_r(r: object):
+    """
+    Debug a requests response
+    """
+    print(f"Status code: {r.status_code}")
+    print(f"Text: {r.text}")
 
 
 class SensuClient(object):
@@ -52,7 +63,7 @@ class SensuClient(object):
 
     def _make_call(self, method, path, fields=None, use_filter=True):
         """
-        Make a call to the Sensu server.
+        Wraps the call to the requests library to help manage session timeouts and token refreshes.
 
         :param method: The HTTP method to use.
         :param path: The path to the API endpoint.
@@ -92,7 +103,7 @@ class SensuClient(object):
         if r.status_code < 200 or r.status_code > 299:
             raise SensuAuthError("Failed to login")
 
-        self.token = token_from_dict(r.json())
+        self.token = SensuToken(**r.json())
         self.session.headers.update({"Authorization": f"Bearer {self.token.access_token}"})
 
         return True
@@ -108,78 +119,75 @@ class SensuClient(object):
         if r.status_code < 200 or r.status_code > 299:
             raise SensuAuthError(f"Failed to refresh token ({r.text})")
 
-        self.token = token_from_dict(r.json())
+        self.token = SensuToken(**r.json())
         self.session.headers.update({"Authorization": f"Bearer {self.token.access_token}"})
 
         return True
 
-    def resource_get(self, call_data):
+
+    def resource_get(self, cls, get_url) -> list[object]:
         """
         Get a resource or resources from the Sensu server.
-
-        :param call_data: The CallData object to use for the call.
         :return: A list of objects representing the resource(s).
         """
 
-        if isinstance(call_data, ResourceBase):
-            call_data = CallData(resource=call_data)
-
-        if call_data.resource is None:
-            raise(ValueError("CallData object must have a resource defined."))
-
-        r = self._make_call("GET", call_data["url"], fields=call_data["fields"])
+        r = self._make_call("GET", get_url)
 
         if r.status_code < 200 or r.status_code > 299:
-            raise SensuResourceMissingError(f"Failed to get resource {call_data["url"]} ({r.status_code}: {r.text})")
+            raise SensuError(f"Failed to get resource(s) ({r.text})")
 
-        klass = type(call_data.resource)
-        retrieved_data = r.json()
-        if isinstance(retrieved_data, dict):
-            resources = list(klass.instantiate_resources(data=[retrieved_data], client=self))
-        else:
-            resources = list(klass.instantiate_resources(data=retrieved_data, client=self))
+        resources = []
+        for _ in r.json():
+            obj = cls(**_)
+            obj._sensu_client = self
+            resources.append(obj)
+
         return resources
 
-    def resource_post(self, call_data):
+
+    def resource_post(self, obj, url=None) -> bool:
         """
         Post a resource to the Sensu server.
-
-        :param resource: The resource to post, or dictionary containing post data.
         :return: The object representing the resource.
         """
 
-        if isinstance(call_data, ResourceBase):
-            call_data = CallData(resource=call_data)
+        try:
+            obj.model_validate(obj)
+        except ValidationError as err:
+            raise SensuResourceError(str(err))
 
-        r = self._make_call("POST", call_data["url"], fields=call_data["fields"])
+        if url is None:
+            url = obj.urlify(purpose="create")
 
-        if r.status_code < 200 or r.status_code > 299:
-            raise SensuError(f"Failed to post resource {call_data["url"]} ({r.status_code}: {r.text})")
+        r = self._make_call(method="POST", path=url, fields=obj.model_dump())
 
-        # Posts don't return resource data, so we'll just return a True.  The caller will have to perform a get if they want to do that.
+        # TODO: Handle a failure
+
         return True
 
-    def resource_put(self, call_data):
+
+    def resource_put(self, obj, url=None) -> bool:
         """
         Put a resource to the Sensu server.
-
-        :param call_data: The CallData object to put
         :return: The object representing the resource.
         """
 
-        if isinstance(call_data, ResourceBase):
-            call_data = CallData(resource=call_data)
+        try:
+            obj.model_validate(obj)
+        except ValidationError as err:
+            raise SensuResourceError(str(err))
 
-        r = self._make_call("PUT", call_data["url"], fields=call_data["fields"])
+        if url is None:
+            url = obj.urlify()
 
-        if r.status_code < 200 or r.status_code > 299:
-            raise SensuError(f"Failed to put resource {call_data["url"]} ({r.status_code}: {r.text})")
+        r = self._make_call(method="PUT", path=url, fields=obj.model_dump())
 
-        klass = type(call_data.resource)
-        new_obj = klass(call_data["fields"], client=self)
-        return new_obj 
+        # TODO: Handle a failure
 
-    def resource_delete(self, call_data):
+        return True
+
+
+    def resource_delete(self, obj, url=None) -> bool:
         """
         Delete a resource from the Sensu server.
 
@@ -187,12 +195,9 @@ class SensuClient(object):
         :return: True if the resource was deleted
         """
 
-        if isinstance(call_data, ResourceBase):
-            call_data = CallData(resource=call_data)
+        if url is None:
+            url = obj.urlify()
 
-        r = self._make_call("DELETE", call_data["url"])
-
-        if r.status_code < 200 or r.status_code > 299:
-            raise SensuError(f"Failed to delete resource {call_data["url"]} ({r.status_code}: {r.text})")
+        r = self._make_call(method="DELETE", path=url)
 
         return True

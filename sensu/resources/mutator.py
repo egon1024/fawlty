@@ -2,101 +2,82 @@
 A module for Sensu mutator resources.
 """
 
-from sensu.resources.base import ResourceBase, CallData
-from sensu.exception import SensuClientError, SensuResourceMissingError, SensuResourceExistsError
+# Built in imports
+from typing import Optional, List, Dict, Literal
+
+# Our imports
+from sensu.resources.base import ResourceBase
+from sensu.client import SensuClient
+
+# 3rd party imports
+from pydantic import BaseModel, model_validator
+
+# Constants
+BASE_URL = "/api/core/v2/namespaces/{namespace}/mutators"
+
+def get_url(namespace: str, name: str = None) -> str:
+    """
+    Get a url to retrieve a list of matching mutator resources.
+    """
+
+    url = BASE_URL.format(namespace=namespace)
+    if name is not None:
+        url += f"/{name}"
+    
+    return url
+
+
+class MutatorMetadata(BaseModel):
+    """
+    A class to represent the data structure of a mutator metadata
+    """
+    name: str
+    namespace: str
+    created_by: Optional[str] = None
+    labels: Optional[dict[str, str]] = {}
+    annotations: Optional[dict[str, str]] = {}
+
 
 class Mutator(ResourceBase):
     """
     A class to represent a Sensu mutator resource.
     """
+    command: Optional[str] = None
+    env_vars: Optional[List[str]] = None
+    eval: Optional[str] = None
+    runtime_assets: Optional[List[str]] = None
+    secrets: Optional[List[Dict[str, str]]] = None
+    timeout: int = 30
+    type: Literal['pipe', 'javascript'] = 'pipe'
+    metadata: MutatorMetadata
 
-    VALID_FIELDS = (
-        "command",
-        "timeout",
-        "env_vars",
-        "runtime_assets",
-        "secrets",
-        "type",
-        "metadata",
-    )
+    @model_validator(mode='after')
+    def check_fields(self):
+        # If type is pipe, command should be set and eval should not
+        if self.type == "pipe":
+            if not self.command:
+                raise ValueError("If type is 'pip', the 'command' attribute must be set.")
+            if self.eval is not None:
+                raise ValueError("If type is 'pipe', the 'eval' attribute must not be set.")
 
-    METADATA_FIELDS = (
-        "name",
-        "namespace",
-        "labels",
-        "annotations",
-        "created_by"
-    )
+        elif self.type == "javascript":
+            if not self.eval:
+                raise ValueError("If type is 'javascript', the 'eval' attribute must be set.")
+            if self.command is not None:
+                raise ValueError("If type is 'javascript', the 'command' attribute must not be set.")
 
-    def __init__(self, fields=None, name=None, namespace=None, client=None):
+        return self
+
+    def urlify(self, purpose: str=None) -> str:
         """
-        Initialize a new Sensu mutator resource.
+        Return the URL for the mutator resource(s).
 
-        :param data: The data for the mutator.
-        """
-
-        fields = fields or {}
-        self.fields = {
-            "metadata": {
-                "name": name,
-                "namespace": namespace,
-                "labels": {},
-                "annotations": {},
-                "created_by": None
-            },
-            "command": None,
-            "timeout": None,
-            "env_vars": [],
-            "runtime_assets": [],
-            "secrets": [],
-            "type": "pipe",
-        }
-        self.client = client
-
-        for field in self.VALID_FIELDS:
-            if field in fields:
-                self.fields[field] = fields[field]
-
-        # Just to help simplify the call to instantiation
-        if name:
-            self.fields["metadata"]["name"] = name
-
-        if namespace:
-            self.fields["metadata"]["namespace"] = namespace
-
-        # Must have a namespace
-        if not self.fields["metadata"]["namespace"]:
-            raise SensuClientError("Mutator must have a namespace")
-
-        self.base_url = f"/api/core/v2/namespaces/{self.fields['metadata']['namespace']}/mutators"
-
-    def get_data(self):
-        """
-        Get the data for the Sensu mutator(s).
+        :return: The URL for the mutator resource.
         """
 
-        if self.fields["metadata"]["name"] is None:
-            return {"url": self.base_url, "fields": None}
+        url = BASE_URL.format(namespace=self.metadata.namespace)
 
-        field_data = {
-            key: deepcopy(self.fields[key])
-            for key in self.VALID_FIELDS
-            if key in self.fields
-        }
+        if purpose != "create":
+            url += f"/{self.metadata.name}"
 
-        return {
-            "url": f"{self.base_url}/{self.fields['metadata']['name']}",
-            "fields": field_data
-        }
-
-    def create_or_update(self):
-        """
-        Create or update the Sensu mutator.
-        """
-
-        data = self.get_data()
-
-        if data["fields"]["metadata"]["name"] is None:
-            raise SensuResourceMissingError("No name provided for mutator")
-
-        return self.client.resource_put(CallData(resource=self, data=data))
+        return url
