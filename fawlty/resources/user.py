@@ -5,8 +5,8 @@ A module to represent a Sensu user resource
 from typing import Optional, List
 
 # Our imports
-from sensu.resources.base import ResourceBase
-from sensu.client import SensuClient
+from fawlty.resources.base import ResourceBase
+from fawlty.sensu_client import SensuClient
 
 # 3rd party imports
 from pydantic import validator

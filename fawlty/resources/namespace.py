@@ -6,8 +6,8 @@ A module to represent a Sensu namespace resource
 from typing import Optional
 
 # My imports
-from sensu.resources.base import ResourceBase
-from sensu.client import SensuClient
+from fawlty.resources.base import ResourceBase
+from fawlty.sensu_client import SensuClient
 
 # Constants
 BASE_URL = "/api/core/v2/namespaces"

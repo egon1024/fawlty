@@ -6,8 +6,8 @@ A module containing a base class to use for Sensu resource objects
 from typing import Optional, Dict
 
 # Our imports
-from sensu.exception import SensuClientError
-from sensu.client import SensuClient
+from fawlty.exception import SensuClientError
+from fawlty.sensu_client import SensuClient
 
 # 3rd party imports
 from pydantic import BaseModel

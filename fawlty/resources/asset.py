@@ -6,8 +6,8 @@ A module to represent a Sensu asset resource
 from typing import Optional, Dict, List
 
 # Our imports
-from sensu.resources.base import ResourceBase, MetadataWithNamespace
-from sensu.client import SensuClient
+from fawlty.resources.base import ResourceBase, MetadataWithNamespace
+from fawlty.sensu_client import SensuClient
 
 # 3rd party imports
 from pydantic import BaseModel

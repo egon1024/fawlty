@@ -5,8 +5,8 @@ A module to represent a Sensu entity resource
 from typing import Optional, List, Dict, Literal, Any
 
 # Our imports
-from sensu.resources.base import ResourceBase, MetadataWithNamespace
-from sensu.client import SensuClient
+from fawlty.resources.base import ResourceBase, MetadataWithNamespace
+from fawlty.sensu_client import SensuClient
 
 # 3rd party imports
 from pydantic import BaseModel, validator

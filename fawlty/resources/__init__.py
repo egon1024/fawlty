@@ -13,7 +13,7 @@ for file in file_list:
     module_name = os.path.splitext(file)[0]
     
     # Import the module
-    module = importlib.import_module(f'sensu.resources.{module_name}')
+    module = importlib.import_module(f'fawlty.resources.{module_name}')
     
     # Add the module to the current namespace
     globals()[module_name] = module

@@ -6,8 +6,8 @@ A module for Sensu mutator resources.
 from typing import Optional, List, Dict, Literal
 
 # Our imports
-from sensu.resources.base import ResourceBase, MetadataWithNamespace
-from sensu.client import SensuClient
+from fawlty.resources.base import ResourceBase, MetadataWithNamespace
+from fawlty.sensu_client import SensuClient
 
 # 3rd party imports
 from pydantic import BaseModel, model_validator
