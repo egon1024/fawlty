@@ -1,0 +1,27 @@
+site_name: Fawlty
+nav:
+  - Home: index.md
+  - About: about.md
+  - Client: client.md
+  - Resources: 
+    - Overview: resources/overview.md
+    - Asset: resources/asset.md
+    - Check: resources/check.md
+    - ClusterRole: resources/clusterrole.md
+    - ClusterRoleBinding: resources/clusterrolebinding.md
+    - Entity: resources/entity.md
+    - Filter: resources/filter.md
+    - Handler: resources/handler.md
+    - Hook: resources/hook.md
+    - Mutator: resources/mutator.md
+    - Namespace: resources/namespace.md
+    - Role: resources/role.md
+    - RoleBinding: resources/rolebinding.md
+    - Silence: resources/silence.md
+    - User: resources/user.md
+theme: readthedocs
+markdown_extensions:
+  - toc:
+      permalink: True
+      separator: "_"
+  - pymdownx.extra
