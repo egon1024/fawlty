@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Client - Fawlty</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Client";
+        var mkdocs_page_input_path = "client.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> Fawlty
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../about/">About</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Client</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#client_1">Client</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#sensuserver">SensuServer</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#sensuclient">SensuClient</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#sample_code">Sample code</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Resources</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/overview/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/asset/">Asset</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/check/">Check</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/clusterrole/">ClusterRole</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/clusterrolebinding/">ClusterRoleBinding</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/entity/">Entity</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/filter/">Filter</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/handler/">Handler</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/hook/">Hook</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/mutator/">Mutator</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/namespace/">Namespace</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/role/">Role</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/rolebinding/">RoleBinding</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/silence/">Silence</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../resources/user/">User</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">Fawlty</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Client</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="client">Client<a class="headerlink" href="#client" title="Permanent link">&para;</a></h1>
+<h2 id="client_1">Client<a class="headerlink" href="#client_1" title="Permanent link">&para;</a></h2>
+<p>In order to instantiate a client, one must import the SensuServer and SensuClient classes.  A SensuServer defines the parameters for accessing a given Sensu server.  The SensuClient is the wrapper that provides a simpler interface for talking to the server.</p>
+<h2 id="classes">Classes<a class="headerlink" href="#classes" title="Permanent link">&para;</a></h2>
+<h3 id="sensuserver">SensuServer<a class="headerlink" href="#sensuserver" title="Permanent link">&para;</a></h3>
+<pre class="highlight"><code class="language-python">from fawlty.sensu_server import SensuServer</code></pre>
+<p>The fields supported by a SensuServer when being instantiated:</p>
+<ul>
+<li><code>host</code> (required) The hostname or IP address of the Sensu server</li>
+<li><code>port</code> Integer representing the port number to connect to.  (<em>Default: 8080</em>)</li>
+<li><code>use_ssl</code>: Boolean indicating whether the connection should be ssl encrypted. (<em>Default: False</em>)</li>
+<li><code>ignore_cert</code>: Boolean indicating if the remote certificate validation should be performed.  Set to True when connecting to a server using a self-signed certificate, to avoid errors. (<em>Default: False</em>)</li>
+</ul>
+<h3 id="sensuclient">SensuClient<a class="headerlink" href="#sensuclient" title="Permanent link">&para;</a></h3>
+<pre class="highlight"><code class="language-python">from fawlty.sensu_server import SensuServer
+from fawlty.sensu_client import SensuClient</code></pre>
+<p>For the most part, after creating a client instance, direct action with it will be minimal.  The primary use will be to pass to resource classes and objects.</p>
+<p>Currently, login only supports username/password and not an API token.   After instantiation (which requires a (#SensuServer) object), the <code>login</code> method of the instance will establish a session with the Sensu API.</p>
+<p>After login, the API will provide a session token which will be tracked by the client object in the <code>token</code> attribute.  The client object will attempt to refresh a token if it is discovered to be close to expiration.  If the application code wishes to refresh a token, it can do so by calling the <code>refresh_token</code> method of the client instance.</p>
+<h2 id="sample_code">Sample code<a class="headerlink" href="#sample_code" title="Permanent link">&para;</a></h2>
+<pre class="highlight"><code class="language-python">from fawlty.client import SensuClient
+from fawlty.sensu_server import SensuServer
+import fawlty.resources
+
+s = SensuServer(host="localhost")
+client = SensuClient(server=s)
+client.login("basil", "fawlty")
+
+# Add a namespace
+new_ns = sensu.resources.namespace.Namespace(
+    name="sybil"
+)
+new_ns.set_client(client)
+new_ns.create()
+
+# Get the list of all namespaces
+namespaces = fawlty.resources.namespace.Namespace.get(client=client)
+print(f"Namespaces: {namespaces})</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../about/" class="btn btn-neutral float-left" title="About"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../resources/overview/" class="btn btn-neutral float-right" title="Overview">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../about/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../resources/overview/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
