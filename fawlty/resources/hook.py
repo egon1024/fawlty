@@ -3,7 +3,7 @@ A module for Sensu hook resources.
 """
 
 # Built in imports
-from typing import Optional, List, Dict, Literal
+from typing import Optional, List, Dict, Literal, ClassVar
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
@@ -11,21 +11,6 @@ from fawlty.sensu_client import SensuClient
 
 # 3rd party imports
 from pydantic import BaseModel, model_validator
-
-# Constants
-BASE_URL = "/api/core/v2/namespaces/{namespace}/hooks"
-
-def get_url(namespace: str, name: str = None) -> str:
-    """
-    Get a url to retrieve a list of matching hook resources.
-    """
-
-    url = BASE_URL.format(namespace=namespace)
-    if name is not None:
-        url += f"/{name}"
-    
-    return url
-
 
 class HookMetadata(MetadataWithNamespace):
     """
@@ -43,6 +28,8 @@ class Hook(ResourceBase):
     timeout: Optional[int] = 60
     metadata: HookMetadata
 
+    BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/hooks"
+
     def urlify(self, purpose: str=None) -> str:
         """
         Return the URL for the hook resource(s).
@@ -50,7 +37,7 @@ class Hook(ResourceBase):
         :return: The URL for the hook resource.
         """
 
-        url = BASE_URL.format(namespace=self.metadata.namespace)
+        url = self.BASE_URL.format(namespace=self.metadata.namespace)
 
         if purpose != "create":
             url += f"/{self.metadata.name}"

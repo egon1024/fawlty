@@ -4,7 +4,7 @@ A module for Sensu check resources.
 
 # Built in imports
 import re
-from typing import Optional, List, Dict, Literal
+from typing import Optional, List, Dict, Literal, ClassVar
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
@@ -14,19 +14,7 @@ from fawlty.sensu_client import SensuClient
 from pydantic import BaseModel, model_validator, validator
 
 # Constants
-BASE_URL = "/api/core/v2/namespaces/{namespace}/checks"
 PROXY_NAME_RE = re.compile('^[\w\.\-]+$')
-
-def get_url(namespace: str, name: str = None) -> str:
-    """
-    Get a url to retrieve a list of matching check resources.
-    """
-
-    url = BASE_URL.format(namespace=namespace)
-    if name is not None:
-        url += f"/{name}"
-    
-    return url
 
 
 class CheckMetadata(MetadataWithNamespace):
@@ -35,7 +23,7 @@ class CheckMetadata(MetadataWithNamespace):
     """
 
 
-class MetricTag(BaseModel):
+class CheckMetricTag(BaseModel):
     """
     A class to represent the data structure of a metric tag
     """
@@ -43,7 +31,7 @@ class MetricTag(BaseModel):
     value: str
 
 
-class MetricThreshold(BaseModel):
+class CheckMetricThreshold(BaseModel):
     max: Optional[str] = None
     min: Optional[str] = None
     status: int
@@ -56,11 +44,11 @@ class MetricThreshold(BaseModel):
         return self
 
 
-class OutputMetricThreshold(BaseModel):
+class CheckOutputMetricThreshold(BaseModel):
     name: str
-    tags: Optional[List[MetricTag]] = None
+    tags: Optional[List[CheckMetricTag]] = None
     null_status: Optional[int] = 0
-    thresholds: List[MetricThreshold]
+    thresholds: List[CheckMetricThreshold]
 
 
 class CheckPipeline(BaseModel):
@@ -115,8 +103,8 @@ class Check(ResourceBase):
         "opentsdb_line", "prometheus_text", ""
     ]] = None
     output_metric_handlers: Optional[List[str]] = None
-    output_metric_tags: Optional[List[MetricTag]] = None
-    output_metric_thresholds: Optional[List[OutputMetricThreshold]] = None
+    output_metric_tags: Optional[List[CheckMetricTag]] = None
+    output_metric_thresholds: Optional[List[CheckOutputMetricThreshold]] = None
     pipelines: Optional[List[CheckPipeline]] = None
     proxy_entity_name: Optional[str] = None
     proxy_requests: Optional[CheckProxyRequests] = None
@@ -131,6 +119,12 @@ class Check(ResourceBase):
     subscriptions: List[str]
     timeout: Optional[int] = None
     ttl: Optional[int] = None
+    metadata: CheckMetadata
+
+    BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/checks"
+    @classmethod
+    def get_url(cls, *args, **kwargs) -> str:
+        return cls.get_url_with_namespace(*args, **kwargs)
 
     @validator("proxy_entity_name")
     def validate_proxy_entity_name(cls, value):

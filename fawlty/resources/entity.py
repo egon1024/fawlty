@@ -2,7 +2,7 @@
 A module to represent a Sensu entity resource
 """
 # Built in imports
-from typing import Optional, List, Dict, Literal, Any
+from typing import Optional, List, Dict, Literal, Any, ClassVar
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
@@ -10,20 +10,6 @@ from fawlty.sensu_client import SensuClient
 
 # 3rd party imports
 from pydantic import BaseModel, validator
-
-# Constants
-BASE_URL = "/api/core/v2/namespaces/{namespace}/entities"
-
-def get_url(namespace: str, name: str = None) -> str:
-    """
-    Get a url to retrieve a list of matching entity resources.
-    """
-
-    url = BASE_URL.format(namespace=namespace)
-    if name is not None:
-        url += f"/{name}"
-    
-    return url
 
 
 class EntityMetadata(MetadataWithNamespace):
@@ -36,6 +22,7 @@ class Entity(ResourceBase):
     """
     A class to represent a Sensu entity resource
     """
+
     metadata: EntityMetadata
     deregister: bool = False
     entity_class: Literal["agent", "proxy", "service"]
@@ -64,6 +51,11 @@ class Entity(ResourceBase):
 
         return value
 
+    BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/entities"
+    @classmethod
+    def get_url(cls, *args, **kwargs) -> str:
+        return cls.get_url_with_namespace(*args, **kwargs)
+
     def urlify(self, purpose: str=None) -> str:
         """
         Return the URL for the entity resource(s).
@@ -71,7 +63,7 @@ class Entity(ResourceBase):
         :return: The URL for the entity resource.
         """
 
-        url = BASE_URL.format(namespace=self.metadata.namespace)
+        url = self.BASE_URL.format(namespace=self.metadata.namespace)
 
         if purpose != "create":
             url += f"/{self.metadata.name}"

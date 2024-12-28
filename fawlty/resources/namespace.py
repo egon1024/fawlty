@@ -3,27 +3,12 @@ A module to represent a Sensu namespace resource
 """
 
 # Built in imports
-from typing import Optional
+from typing import Optional, ClassVar
 
 # My imports
 from fawlty.resources.base import ResourceBase
 from fawlty.sensu_client import SensuClient
 
-# Constants
-BASE_URL = "/api/core/v2/namespaces"
-
-def get_url(name: str=None) -> str:
-    """
-    Get a url to retrieve a list of matching namespace resources.
-    """
-
-    url = BASE_URL
-
-    if name is not None:
-        url += f"/{name}"
-
-    return BASE_URL
-    
 
 class Namespace(ResourceBase):
     """
@@ -33,6 +18,11 @@ class Namespace(ResourceBase):
     name: str
     _sensu_client: Optional[SensuClient] = None
 
+    BASE_URL: ClassVar[str] = "/api/core/v2/namespaces"
+    @classmethod
+    def get_url(cls, *args, **kwargs) -> str:
+        return cls.get_url_without_namespace(*args, **kwargs)
+
     def urlify(self, purpose: str=None) -> str:
         """
         Return the URL for the namespace resource(s).
@@ -40,10 +30,10 @@ class Namespace(ResourceBase):
         :return: The URL for the namespace resource.
         """
 
-        url = BASE_URL
+        url = self.BASE_URL
 
         if purpose != "create":
-            url = f"{BASE_URL}/{self.name}"
+            url += f"/{self.name}"
 
         return url
 

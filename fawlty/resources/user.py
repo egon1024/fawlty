@@ -12,20 +12,6 @@ from fawlty.sensu_client import SensuClient
 from pydantic import validator
 import bcrypt
 
-# Constants
-BASE_URL = "/api/core/v2/users"
-
-def get_url(name: str = None) -> str:
-    """
-    Get a url to retrieve a list of matching user resources.
-    """
-
-    url = BASE_URL
-    if name is not None:
-        url += f"/{name}"
-    
-    return url
-
 def hash_password(passwd: str) -> str:
     """
     Takes a password and switches it to a hashed form for use in Sensu
@@ -48,6 +34,11 @@ class UserPasswordReset(ResourceBase):
     password_hash: str
     _sensu_client: Optional[SensuClient] = None
 
+    BASE_URL: ClassVar[str] = "/api/core/v2/users"
+    @classmethod
+    def get_url(cls, *args, **kwargs) -> str:
+        return cls.get_url_without_namespace(*args, **kwargs)
+
     def urlify(self, purpose: str=None) -> str:
         """
         Provide the url for reseting the user's password
@@ -56,10 +47,10 @@ class UserPasswordReset(ResourceBase):
         # We ignore the purpose field - it's only present to preserve the
         # method signature
 
-        return BASE_URL + f"/{self.username}/reset_password"
+        return cls.BASE_URL + f"/{self.username}/reset_password"
 
 
-class ChangePassword(ResourceBase):
+class UserChangePassword(ResourceBase):
     """
     This is a special class being used to represent the structure and URL specifically
     for the purpose of a user to update their own password
@@ -69,6 +60,11 @@ class ChangePassword(ResourceBase):
     password_hash: str
     _sensu_client: Optional[SensuClient] = None
 
+    BASE_URL: ClassVar[str] = "/api/core/v2/users"
+    @classmethod
+    def get_url(cls, *args, **kwargs) -> str:
+        return cls.get_url_without_namespace(*args, **kwargs)
+
     def urlify(self, purpose: str=None) -> str:
         """
         Provide the url for reseting the user's password
@@ -77,7 +73,7 @@ class ChangePassword(ResourceBase):
         # We ignore the purpose field - it's only present to preserve the
         # method signature
 
-        return BASE_URL + f"/{self.username}/password"
+        return cls.BASE_URL + f"/{self.username}/password"
 
 
 
@@ -98,6 +94,11 @@ class User(ResourceBase):
             raise ValueError ("Password must be at least 8 characters long")
         return value
 
+    BASE_URL: ClassVar[str] = "/api/core/v2/users"
+    @classmethod
+    def get_url(cls, *args, **kwargs) -> str:
+        return cls.get_url_without_namespace(*args, **kwargs)
+
     def urlify(self, purpose: str=None) -> str:
         """
         Return the URL for the user resource.
@@ -105,7 +106,7 @@ class User(ResourceBase):
         :return: The URL for the user resource.
         """
 
-        url = BASE_URL
+        url = cls.BASE_URL
 
         if purpose != "create":
             url += f"/{self.username}"
@@ -146,7 +147,7 @@ class User(ResourceBase):
             raise SensuClientError(f"Could not create '{self.__class__.__name__}' object without a client")
 
         password_hash = hash_password(new_password)
-        reset_obj = ChangePassword(
+        reset_obj = UserChangePassword(
             username=self.username,
             password=old_password,
             password_hash=password_hash
@@ -165,7 +166,7 @@ class User(ResourceBase):
 
         result = self._sensu_client.resource_put(
             obj=self,
-            url=BASE_URL + f"/{self.username}/reinstate"
+            url=cls.BASE_URL + f"/{self.username}/reinstate"
         )
         if result:
             self.disabled = False

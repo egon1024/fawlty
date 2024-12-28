@@ -3,7 +3,7 @@ A module to represent a Sensu rolebinding resource
 """
 
 # Built in imports
-from typing import Optional, List, Dict, Literal
+from typing import Optional, List, Dict, Literal, ClassVar
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
@@ -11,20 +11,6 @@ from fawlty.sensu_client import SensuClient
 
 # 3rd party imports
 from pydantic import BaseModel, validator
-
-# Constants
-BASE_URL = "/api/core/v2/namespaces/{namespace}/rolebindings"
-
-def get_url(namespace: str, name: str = None) -> str:
-    """
-    Get a url to retrieve a list of matching rolebindings resources.
-    """
-
-    url = BASE_URL.format(namespace=namespace)
-    if name is not None:
-        url += f"/{name}"
-    
-    return url
 
 
 class RoleBindingMetadata(MetadataWithNamespace):
@@ -59,6 +45,10 @@ class RoleBinding(ResourceBase):
     subjects: List[RoleBindingSubject]
     _sensu_client: Optional[SensuClient] = None
 
+    BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/rolebindings"
+    @classmethod
+    def get_url(cls, *args, **kwargs) -> str:
+        return cls.get_url_with_namespace(*args, **kwargs
 
     def urlify(self, purpose: str=None) -> str:
         """
@@ -67,7 +57,7 @@ class RoleBinding(ResourceBase):
         :return: The URL for the rolebinding resource.
         """
 
-        url = BASE_URL.format(namespace=self.metadata.namespace)
+        url = self.BASE_URL.format(namespace=self.metadata.namespace)
 
         if purpose != "create":
             url += f"/{self.metadata.name}"

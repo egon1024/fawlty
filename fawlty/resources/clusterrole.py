@@ -3,7 +3,7 @@ A module to represent a Sensu clusterrole resource
 """
 
 # Built in imports
-from typing import Optional, List, Dict, Literal
+from typing import Optional, List, Dict, Literal, ClassVar
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithoutNamespace
@@ -11,21 +11,6 @@ from fawlty.sensu_client import SensuClient
 
 # 3rd party imports
 from pydantic import BaseModel, validator
-
-# Constants
-BASE_URL = "/api/core/v2/clusterroles"
-
-
-def get_url(name: str = None) -> str:
-    """
-    Get a url to retrieve a list of matching clusterrole resources.
-    """
-
-    url = BASE_URL
-    if name is not None:
-        url += f"/{name}"
-    
-    return url
 
 
 class ClusterRoleMetadata(MetadataWithoutNamespace):
@@ -77,6 +62,11 @@ class ClusterRole(ResourceBase):
     rules: List[ClusterRoleRule]
     _sensu_client: Optional[SensuClient] = None
 
+    BASE_URL: ClassVar[str] = "/api/core/v2/clusterroles"
+    @classmethod
+    def get_url(cls, *args, **kwargs) -> str:
+        return cls.get_url_without_namespace(*args, **kwargs)
+
     def urlify(self, purpose: str=None) -> str:
         """
         Return the URL for the clusterrole resource.
@@ -84,7 +74,7 @@ class ClusterRole(ResourceBase):
         :return: The URL for the clusterrole resource.
         """
 
-        url = BASE_URL
+        url = self.BASE_URL
 
         if purpose != "create":
             url += f"/{self.metadata.name}"
