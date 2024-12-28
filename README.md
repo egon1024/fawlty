@@ -3,17 +3,6 @@
 
 This is a Python client library for interacting with the Sensu server.
 
-## Installation
+## Docs
 
-```bash
-pip install .
-```
-
-## Usage
-
-```python
-
-from sensu import Client
-
-client = Client(base_url="http://localhost:4567")
-```
+See (documentation pages)[https://egon1024.github.io/Fawlty/].
