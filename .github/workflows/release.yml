@@ -23,6 +23,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry
 
+      - name: Install MkDocs
+        run: |
+          poetry install
+
       - name: Extract package version
         id: package_version
         run: |
@@ -50,3 +54,7 @@ jobs:
 
           echo "Create release"
           gh release create ${{ env.PACKAGE_VERSION }} --generate-notes --latest
+
+      - name: Deploy Documentation
+        run: |
+          make deploy-docs

@@ -1,4 +1,4 @@
-site_name: Fawlty
+site_name: fawlty
 nav:
   - Home: index.md
   - About: about.md
