@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Extract package version
+        id: package_version
+        run: |
+          PACKAGE_VERSION=$(poetry version -s)
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
+
+      - name: Check for existing release
+        run: |
+          if gh release view ${{ env.PACKAGE_VERSION }}; then
+            echo "Previous release with version ${{ env.PACKAGE_VERSION }} exists"
+            exit 1
+          else
+            echo "Success: No previous release with version ${{ env.PACKAGE_VERSION }}"
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Create/push tag"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ env.PACKAGE_VERSION }}
+          git push --tags
+
+          echo "Create release"
+          gh release create ${{ env.PACKAGE_VERSION }} --generate-notes --latest

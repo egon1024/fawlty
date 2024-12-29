@@ -1,0 +1,38 @@
+name: Check Version
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check_version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install Poetry
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+
+      - name: Extract package version
+        id: package_version
+        run: |
+          PACKAGE_VERSION=$(poetry version -s)
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
+
+      - name: Check for existing release
+        run: |
+          if gh release view ${{ env.PACKAGE_VERSION }}; then
+            echo "Release with version ${{ env.PACKAGE_VERSION }} already exists"
+            exit 1
+          else
+            echo "No sign of release with version ${{ env.PACKAGE_VERSION }} - good to go."
+          fi
