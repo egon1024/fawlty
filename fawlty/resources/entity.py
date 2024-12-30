@@ -9,7 +9,7 @@ from fawlty.resources.base import ResourceBase, MetadataWithNamespace
 from fawlty.sensu_client import SensuClient
 
 # 3rd party imports
-from pydantic import BaseModel, validator
+from pydantic import validator
 
 
 class EntityMetadata(MetadataWithNamespace):
@@ -33,6 +33,7 @@ class Entity(ResourceBase):
     subscriptions: List[str]
     system: Optional[Dict[str, Any]] = None
     user: Optional[str] = "agent"
+    _sensu_client: Optional[SensuClient] = None
 
     @validator("deregistration")
     def validate_deregistration(cls, value):
@@ -52,11 +53,12 @@ class Entity(ResourceBase):
         return value
 
     BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/entities"
+
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
         return cls.get_url_with_namespace(*args, **kwargs)
 
-    def urlify(self, purpose: str=None) -> str:
+    def urlify(self, purpose: str = None) -> str:
         """
         Return the URL for the entity resource(s).
 

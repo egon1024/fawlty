@@ -6,10 +6,12 @@ authors = ["Cole Tuininga <cole.tuininga@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9.0"
 requests = "^2.32.3"
 pydantic = "^2.10.4"
 bcrypt = "^4.2.1"
+flake8 = "^7.1.1"
+pylint = "^3.3.3"
 
 [tool.poetry.dev-dependencies]
 mkdocs = "^1.6.1"

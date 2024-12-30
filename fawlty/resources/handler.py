@@ -39,6 +39,7 @@ class Handler(ResourceBase):
     socket: Optional[HandlerSocket] = None
     timeout: Optional[int] = 60
     metadata: HandlerMetadata
+    _sensu_client: Optional[SensuClient] = None
 
     @model_validator(mode='after')
     def check_fields(self):
@@ -74,16 +75,19 @@ class Handler(ResourceBase):
 
             for entry in self.secrets:
                 if entry.keys() != valid_key_set:
-                    raise ValueError("Secrets dictionaries must have exactly two keys: 'name' and 'secret'")
+                    raise ValueError(
+                        "Secrets dictionaries must have exactly two keys: 'name' and 'secret'"
+                    )
 
         return self
 
     BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/handlers"
+
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
         return cls.get_url_with_namespace(*args, **kwargs)
 
-    def urlify(self, purpose: str=None) -> str:
+    def urlify(self, purpose: str = None) -> str:
         """
         Return the URL for the handler resource(s).
 

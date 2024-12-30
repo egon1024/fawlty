@@ -14,7 +14,7 @@ from fawlty.sensu_client import SensuClient
 from pydantic import BaseModel, model_validator, validator
 
 # Constants
-PROXY_NAME_RE = re.compile('^[\w\.\-]+$')
+PROXY_NAME_RE = re.compile(r'^[\w\.\-]+$')
 
 
 class CheckMetadata(MetadataWithNamespace):
@@ -120,8 +120,10 @@ class Check(ResourceBase):
     timeout: Optional[int] = None
     ttl: Optional[int] = None
     metadata: CheckMetadata
+    _sensu_client: Optional[SensuClient] = None
 
     BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/checks"
+
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
         return cls.get_url_with_namespace(*args, **kwargs)
@@ -144,14 +146,14 @@ class Check(ResourceBase):
 
         return value
 
-    def urlify(self, purpose: str=None) -> str:
+    def urlify(self, purpose: str = None) -> str:
         """
         Return the URL for the check resource(s).
 
         :return: The URL for the check resource.
         """
 
-        url = BASE_URL.format(namespace=self.metadata.namespace)
+        url = self.BASE_URL.format(namespace=self.metadata.namespace)
 
         if purpose != "create":
             url += f"/{self.metadata.name}"

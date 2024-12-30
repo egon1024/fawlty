@@ -3,7 +3,7 @@ A module to represent a Sensu role resource
 """
 
 # Built in imports
-from typing import Optional, List, Dict, Literal, ClassVar
+from typing import Optional, List, Literal, ClassVar
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
@@ -39,13 +39,13 @@ class RoleRule(BaseModel):
     @validator("verbs")
     def validate_verbs(cls, value):
         if "*" in value and len(value) > 1:
-            raise valueerror("if '*' is in the list, it must be the only item.")
+            raise ValueError("if '*' is in the list, it must be the only item.")
         return value
 
     @validator("resources")
     def validate_resources(cls, value):
         if "*" in value and len(value) > 1:
-            raise valueerror("if '*' is in the list, it must be the only item.")
+            raise ValueError("if '*' is in the list, it must be the only item.")
         return value
 
 
@@ -59,18 +59,19 @@ class Role(ResourceBase):
     _sensu_client: Optional[SensuClient] = None
 
     BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/roles"
+
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
         return cls.get_url_with_namespace(*args, **kwargs)
 
-    def urlify(self, purpose: str=None) -> str:
+    def urlify(self, purpose: str = None) -> str:
         """
         Return the URL for the role resource(s).
 
         :return: The URL for the role resource.
         """
 
-        url = BASE_URL.format(namespace=self.metadata.namespace)
+        url = self.BASE_URL.format(namespace=self.metadata.namespace)
 
         if purpose != "create":
             url += f"/{self.metadata.name}"

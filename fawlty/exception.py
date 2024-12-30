@@ -37,16 +37,19 @@ class SensuIncompleteError(SensuError):
     """
     pass
 
+
 class SensuResourceError(SensuError):
     """
     A generic error for resource operations
     """
+
 
 class SensuResourceMissingError(SensuResourceError):
     """
     Indicates that a resource is missing
     """
     pass
+
 
 class SensuResourceExistsError(SensuResourceError):
     """

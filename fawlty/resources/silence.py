@@ -3,14 +3,14 @@ A module for Sensu silence resources.
 """
 
 # Built in imports
-from typing import Optional, List, Dict, Literal, ClassVar
+from typing import Optional, ClassVar
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
 from fawlty.sensu_client import SensuClient
 
 # 3rd party imports
-from pydantic import BaseModel, model_validator
+from pydantic import model_validator
 
 
 class SilenceMetadata(MetadataWithNamespace):
@@ -29,6 +29,7 @@ class Silence(ResourceBase):
     creator: Optional[str] = None
     reason: Optional[str] = None
     metadata: SilenceMetadata
+    _sensu_client: Optional[SensuClient] = None
 
     @model_validator(mode='after')
     def check_fields(self):
@@ -40,19 +41,19 @@ class Silence(ResourceBase):
 
     BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/silenced"
 
-    def urlify(self, purpose: str=None) -> str:
+    @classmethod
+    def get_url(cls, *args, **kwargs) -> str:
+        return cls.get_url_with_namespace(*args, **kwargs)
+
+    def urlify(self, purpose: str = None) -> str:
         """
         Return the URL for the silence resource(s).
 
         :return: The URL for the handler resource.
         """
 
-        url = BASE_URL.format(namespace=self.metadata.namespace)
-        @classmethod
-        def get_url(cls, *args, **kwargs) -> str:
-            return cls.get_url_with_namespace(*args, **kwargs)
-
+        url = self.BASE_URL.format(namespace=self.metadata.namespace)
         if purpose != "create":
             url += f"/{self.metadata.name}"
 
-        return url 
+        return url

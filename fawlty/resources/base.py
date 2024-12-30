@@ -3,23 +3,24 @@ A module containing a base class to use for Sensu resource objects
 """
 
 # Built in imports
-from typing import Optional, Dict, ClassVar, Annotated
+from typing import Optional, Dict
 
 # Our imports
 from fawlty.exception import SensuClientError
 from fawlty.sensu_client import SensuClient
 
 # 3rd party imports
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 ###
 # TODO:
 #
 # Track whether the object has been changed since last write to the sensu
-# server (dirty = T/F perhaps?).  Write ops would be noops if dirty == F. 
+# server (dirty = T/F perhaps?).  Write ops would be noops if dirty == F.
 # "Force" flag to override
 #
 ###
+
 
 class ResourceBase(BaseModel):
     """
@@ -29,7 +30,6 @@ class ResourceBase(BaseModel):
     # Needed to set arbitrary items like BASE_URL and the get_url method
     class Config:
         arbitrary_types_allowed = True
-
 
     def set_client(self, client: SensuClient):
         """
@@ -81,17 +81,17 @@ class ResourceBase(BaseModel):
 
         return resources
 
-
     def create(self) -> bool:
         """
         Create resource.
         """
 
         if not self._sensu_client:
-            raise SensuClientError(f"Could not create '{self.__class__.__name__}' object without a client")
+            raise SensuClientError(
+                f"Could not create '{self.__class__.__name__}' object without a client"
+            )
 
         return self._sensu_client.resource_post(obj=self)
-
 
     def update(self) -> bool:
         """
@@ -99,10 +99,11 @@ class ResourceBase(BaseModel):
         """
 
         if not self._sensu_client:
-            raise SensuClientError(f"Could not update '{self.__class__.__name__}' object without a client")
+            raise SensuClientError(
+                f"Could not update '{self.__class__.__name__}' object without a client"
+            )
 
         return self._sensu_client.resource_put(obj=self)
-
 
     def delete(self) -> bool:
         """
@@ -110,9 +111,12 @@ class ResourceBase(BaseModel):
         """
 
         if not self._sensu_client:
-            raise SensuClientError(f"Could not delete '{self.__class__.__name__}' object without a client")
+            raise SensuClientError(
+                f"Could not delete '{self.__class__.__name__}' object without a client"
+            )
 
         return self._sensu_client.resource_delete(obj=self)
+
 
 class MetadataWithoutNamespace(BaseModel):
     """
@@ -122,6 +126,7 @@ class MetadataWithoutNamespace(BaseModel):
     created_by: Optional[str] = None
     labels: Optional[Dict[str, str]] = {}
     annotations: Optional[Dict[str, str]] = {}
+
 
 class MetadataWithNamespace(BaseModel):
     """

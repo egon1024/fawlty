@@ -4,7 +4,6 @@ Implements a class to act as a Sensu client.
 
 # Built in imports
 import json
-from pprint import pformat
 
 # 3rd party imports
 import requests
@@ -15,8 +14,9 @@ from fawlty.sensu_token import SensuToken
 from fawlty.exception import (
     SensuConnectionError, SensuNeedRefresh,
     SensuAuthError, SensuNeedLogin,
-    SensuResourceError, SensuResourceMissingError, SensuError
+    SensuResourceError, SensuError
 )
+
 
 def debug_r(r: object):
     """
@@ -42,7 +42,6 @@ class SensuClient(object):
         self.token = None
         self.session = requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
-
 
     def call_filter(self):
         """
@@ -124,7 +123,6 @@ class SensuClient(object):
 
         return True
 
-
     def resource_get(self, cls, get_url) -> list[object]:
         """
         Get a resource or resources from the Sensu server.
@@ -144,7 +142,6 @@ class SensuClient(object):
 
         return resources
 
-
     def resource_post(self, obj, url=None) -> bool:
         """
         Post a resource to the Sensu server.
@@ -159,12 +156,11 @@ class SensuClient(object):
         if url is None:
             url = obj.urlify(purpose="create")
 
-        r = self._make_call(method="POST", path=url, fields=obj.model_dump())
+        self._make_call(method="POST", path=url, fields=obj.model_dump())
 
         # TODO: Handle a failure
 
         return True
-
 
     def resource_put(self, obj, url=None) -> bool:
         """
@@ -180,12 +176,11 @@ class SensuClient(object):
         if url is None:
             url = obj.urlify()
 
-        r = self._make_call(method="PUT", path=url, fields=obj.model_dump())
+        self._make_call(method="PUT", path=url, fields=obj.model_dump())
 
         # TODO: Handle a failure
 
         return True
-
 
     def resource_delete(self, obj, url=None) -> bool:
         """
@@ -198,6 +193,6 @@ class SensuClient(object):
         if url is None:
             url = obj.urlify()
 
-        r = self._make_call(method="DELETE", path=url)
+        self._make_call(method="DELETE", path=url)
 
         return True

@@ -3,7 +3,7 @@ A module to represent a Sensu clusterrole resource
 """
 
 # Built in imports
-from typing import Optional, List, Dict, Literal, ClassVar
+from typing import Optional, List, Literal, ClassVar
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithoutNamespace
@@ -43,13 +43,13 @@ class ClusterRoleRule(BaseModel):
     @validator("verbs")
     def validate_verbs(cls, value):
         if "*" in value and len(value) > 1:
-            raise valueerror("if '*' is in the list, it must be the only item.")
+            raise ValueError("if '*' is in the list, it must be the only item.")
         return value
 
     @validator("resources")
     def validate_resources(cls, value):
         if "*" in value and len(value) > 1:
-            raise valueerror("if '*' is in the list, it must be the only item.")
+            raise ValueError("if '*' is in the list, it must be the only item.")
         return value
 
 
@@ -63,11 +63,12 @@ class ClusterRole(ResourceBase):
     _sensu_client: Optional[SensuClient] = None
 
     BASE_URL: ClassVar[str] = "/api/core/v2/clusterroles"
+
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
         return cls.get_url_without_namespace(*args, **kwargs)
 
-    def urlify(self, purpose: str=None) -> str:
+    def urlify(self, purpose: str = None) -> str:
         """
         Return the URL for the clusterrole resource.
 
@@ -80,5 +81,3 @@ class ClusterRole(ResourceBase):
             url += f"/{self.metadata.name}"
 
         return url
-
-
