@@ -46,18 +46,32 @@ jobs:
             echo "Success: No previous release with version ${{ env.PACKAGE_VERSION }}"
           fi
 
+      - name: Build Package
+        run: |
+          poetry build
+
       - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Create/push tag"
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git tag ${{ env.PACKAGE_VERSION }}
-          git push --tags
+        with:
+          tag_name: ${{ env.PACKAGE_VERSION }}
+          release_name: ${{ env.PACKAGE_VERSION }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
 
-          echo "Create release"
-          gh release create ${{ env.PACKAGE_VERSION }} --generate-notes --latest
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/fawlty-*.whl
+          asset_name: fawlty-${{ env.PACKAGE_VERSION }}.whl
+          asset_content_type: application/gzip
 
       - name: Pull gh-pages branch
         run: |
