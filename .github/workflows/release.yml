@@ -48,7 +48,7 @@ jobs:
 
       - name: Build Package
         run: |
-          poetry build
+          poetry build && ls -lhR .
 
       - name: Create GitHub Release
         id: create_release
