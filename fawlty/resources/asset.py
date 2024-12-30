@@ -29,18 +29,22 @@ class Asset(ResourceBase):
     _sensu_client: Optional[SensuClient] = None
 
     BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/assets"
+
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the namespaced version of the class method.
+        """
         return cls.get_url_with_namespace(*args, **kwargs)
 
-    def urlify(self, purpose: str=None) -> str:
+    def urlify(self, purpose: str = None) -> str:
         """
         Return the URL for the asset resource(s).
 
         :return: The URL for the asset resource.
         """
 
-        url = BASE_URL.format(namespace=self.metadata.namespace)
+        url = self.BASE_URL.format(namespace=self.metadata.namespace)
 
         if purpose != "create":
             url += f"/{self.metadata.name}"

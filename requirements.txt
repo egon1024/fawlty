@@ -1,8 +1,0 @@
-# Add your dependencies here
-wheel
-pytest
-requests==2.32.3
-pydantic==2.9.2
-mkdocs==1.6.1
-pymdown-extensions==10.13
-bcrypt==4.2.1

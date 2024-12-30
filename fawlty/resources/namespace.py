@@ -19,11 +19,15 @@ class Namespace(ResourceBase):
     _sensu_client: Optional[SensuClient] = None
 
     BASE_URL: ClassVar[str] = "/api/core/v2/namespaces"
+
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the non-namespaced version of the class method.
+        """
         return cls.get_url_without_namespace(*args, **kwargs)
 
-    def urlify(self, purpose: str=None) -> str:
+    def urlify(self, purpose: str = None) -> str:
         """
         Return the URL for the namespace resource(s).
 
@@ -36,4 +40,3 @@ class Namespace(ResourceBase):
             url += f"/{self.name}"
 
         return url
-

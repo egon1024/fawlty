@@ -3,14 +3,14 @@ A module to represent a Sensu role resource
 """
 
 # Built in imports
-from typing import Optional, List, Dict, Literal, ClassVar
+from typing import Optional, List, Literal, ClassVar
+
+# 3rd party imports
+from pydantic import BaseModel, validator
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
 from fawlty.sensu_client import SensuClient
-
-# 3rd party imports
-from pydantic import BaseModel, validator
 
 
 class RoleMetadata(MetadataWithNamespace):
@@ -38,14 +38,20 @@ class RoleRule(BaseModel):
 
     @validator("verbs")
     def validate_verbs(cls, value):
+        """
+        Make sure the verb(s) passed in are valid
+        """
         if "*" in value and len(value) > 1:
-            raise valueerror("if '*' is in the list, it must be the only item.")
+            raise ValueError("if '*' is in the list, it must be the only item.")
         return value
 
     @validator("resources")
     def validate_resources(cls, value):
+        """
+        Make sure the list of resources is valid
+        """
         if "*" in value and len(value) > 1:
-            raise valueerror("if '*' is in the list, it must be the only item.")
+            raise ValueError("if '*' is in the list, it must be the only item.")
         return value
 
 
@@ -59,18 +65,22 @@ class Role(ResourceBase):
     _sensu_client: Optional[SensuClient] = None
 
     BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/roles"
+
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the namespaced version of the class method.
+        """
         return cls.get_url_with_namespace(*args, **kwargs)
 
-    def urlify(self, purpose: str=None) -> str:
+    def urlify(self, purpose: str = None) -> str:
         """
         Return the URL for the role resource(s).
 
         :return: The URL for the role resource.
         """
 
-        url = BASE_URL.format(namespace=self.metadata.namespace)
+        url = self.BASE_URL.format(namespace=self.metadata.namespace)
 
         if purpose != "create":
             url += f"/{self.metadata.name}"

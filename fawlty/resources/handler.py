@@ -5,12 +5,12 @@ A module for Sensu handler resources.
 # Built in imports
 from typing import Optional, List, Dict, Literal, ClassVar
 
+# 3rd party imports
+from pydantic import BaseModel, model_validator
+
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
 from fawlty.sensu_client import SensuClient
-
-# 3rd party imports
-from pydantic import BaseModel, model_validator
 
 
 class HandlerMetadata(MetadataWithNamespace):
@@ -20,6 +20,9 @@ class HandlerMetadata(MetadataWithNamespace):
 
 
 class HandlerSocket(BaseModel):
+    """
+    A class to represent the data structure of a handler socket
+    """
     host: str
     port: int
 
@@ -39,9 +42,13 @@ class Handler(ResourceBase):
     socket: Optional[HandlerSocket] = None
     timeout: Optional[int] = 60
     metadata: HandlerMetadata
+    _sensu_client: Optional[SensuClient] = None
 
     @model_validator(mode='after')
     def check_fields(self):
+        """
+        Perform multiple different validations on the values used to populate the instance
+        """
         # If type is "set", handlers must be defined
         if self.type == "set":
             if not self.handlers:
@@ -69,21 +76,28 @@ class Handler(ResourceBase):
             raise ValueError("Attribute 'socket' is only valid when type='udp' or type='tcp'")
 
         # Secrets dictionaries must have exactly two keys, "name" and "secret"
-        if self.secrets:
+        if isinstance(self.secrets, list) and self.secrets:
             valid_key_set = set(("name", "secret"))
 
+            # pylint: disable=E1133
             for entry in self.secrets:
                 if entry.keys() != valid_key_set:
-                    raise ValueError("Secrets dictionaries must have exactly two keys: 'name' and 'secret'")
+                    raise ValueError(
+                        "Secrets dictionaries must have exactly two keys: 'name' and 'secret'"
+                    )
 
         return self
 
     BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/handlers"
+
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the namespaced version of the class method.
+        """
         return cls.get_url_with_namespace(*args, **kwargs)
 
-    def urlify(self, purpose: str=None) -> str:
+    def urlify(self, purpose: str = None) -> str:
         """
         Return the URL for the handler resource(s).
 

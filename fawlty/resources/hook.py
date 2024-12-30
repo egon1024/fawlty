@@ -3,14 +3,14 @@ A module for Sensu hook resources.
 """
 
 # Built in imports
-from typing import Optional, List, Dict, Literal, ClassVar
+from typing import Optional, List, ClassVar
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
 from fawlty.sensu_client import SensuClient
 
 # 3rd party imports
-from pydantic import BaseModel, model_validator
+
 
 class HookMetadata(MetadataWithNamespace):
     """
@@ -27,10 +27,11 @@ class Hook(ResourceBase):
     stdin: Optional[bool] = False
     timeout: Optional[int] = 60
     metadata: HookMetadata
+    _sensu_client: Optional[SensuClient] = None
 
     BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/hooks"
 
-    def urlify(self, purpose: str=None) -> str:
+    def urlify(self, purpose: str = None) -> str:
         """
         Return the URL for the hook resource(s).
 

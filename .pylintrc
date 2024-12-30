@@ -1,0 +1,5 @@
+[MESSAGES CONTROL]
+# E0213 - Ignore @validator decorated messages not having "self" as first argument
+# R0801 - Similar lines in multiple files
+# W0511 - TODO items.  I'll get to them eventually.  Maybe
+disable = E0213, R0801, W0511

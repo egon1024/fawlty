@@ -2,25 +2,27 @@
 A module to represent a Sensu user resource
 """
 # Built in imports
-from typing import Optional, List
-
-# Our imports
-from fawlty.resources.base import ResourceBase
-from fawlty.sensu_client import SensuClient
+from typing import Optional, List, ClassVar
 
 # 3rd party imports
 from pydantic import validator
 import bcrypt
+
+# Our imports
+from fawlty.resources.base import ResourceBase
+from fawlty.sensu_client import SensuClient
+from fawlty.exceptions import SensuClientError
+
 
 def hash_password(passwd: str) -> str:
     """
     Takes a password and switches it to a hashed form for use in Sensu
     """
 
-    bytes = passwd.encode('utf-8')
+    pw_bytes = passwd.encode('utf-8')
     salt = bcrypt.gensalt()
-    hash = bcrypt.hashpw(bytes, salt)
-    hashed_str = hash.decode('utf-8')
+    pw_hash = bcrypt.hashpw(pw_bytes, salt)
+    hashed_str = pw_hash.decode('utf-8')
 
     return hashed_str
 
@@ -35,11 +37,16 @@ class UserPasswordReset(ResourceBase):
     _sensu_client: Optional[SensuClient] = None
 
     BASE_URL: ClassVar[str] = "/api/core/v2/users"
+
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the non-namespaced version of the class method.
+        """
         return cls.get_url_without_namespace(*args, **kwargs)
 
-    def urlify(self, purpose: str=None) -> str:
+    # pylint: disable=W0613
+    def urlify(self, purpose: str = None) -> str:
         """
         Provide the url for reseting the user's password
         """
@@ -47,7 +54,7 @@ class UserPasswordReset(ResourceBase):
         # We ignore the purpose field - it's only present to preserve the
         # method signature
 
-        return cls.BASE_URL + f"/{self.username}/reset_password"
+        return self.BASE_URL + f"/{self.username}/reset_password"
 
 
 class UserChangePassword(ResourceBase):
@@ -61,11 +68,16 @@ class UserChangePassword(ResourceBase):
     _sensu_client: Optional[SensuClient] = None
 
     BASE_URL: ClassVar[str] = "/api/core/v2/users"
+
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the non-namespaced version of the class method.
+        """
         return cls.get_url_without_namespace(*args, **kwargs)
 
-    def urlify(self, purpose: str=None) -> str:
+    # pylint: disable=W0613
+    def urlify(self, purpose: str = None) -> str:
         """
         Provide the url for reseting the user's password
         """
@@ -73,8 +85,7 @@ class UserChangePassword(ResourceBase):
         # We ignore the purpose field - it's only present to preserve the
         # method signature
 
-        return cls.BASE_URL + f"/{self.username}/password"
-
+        return self.BASE_URL + f"/{self.username}/password"
 
 
 class User(ResourceBase):
@@ -90,23 +101,30 @@ class User(ResourceBase):
 
     @validator("password")
     def validate_password(cls, value):
+        """
+        Perform VERY basic validation on the password.  We'll let sensu do the rest.
+        """
         if value is not None and len(value) < 8:
-            raise ValueError ("Password must be at least 8 characters long")
+            raise ValueError("Password must be at least 8 characters long")
         return value
 
     BASE_URL: ClassVar[str] = "/api/core/v2/users"
+
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the non-namespaced version of the class method.
+        """
         return cls.get_url_without_namespace(*args, **kwargs)
 
-    def urlify(self, purpose: str=None) -> str:
+    def urlify(self, purpose: str = None) -> str:
         """
         Return the URL for the user resource.
 
         :return: The URL for the user resource.
         """
 
-        url = cls.BASE_URL
+        url = self.BASE_URL
 
         if purpose != "create":
             url += f"/{self.username}"
@@ -126,7 +144,9 @@ class User(ResourceBase):
         """
 
         if not self._sensu_client:
-            raise SensuClientError(f"Could not create '{self.__class__.__name__}' object without a client")
+            raise SensuClientError(
+                f"Could not create '{self.__class__.__name__}' object without a client"
+            )
 
         password_hash = hash_password(new_password)
         reset_obj = UserPasswordReset(
@@ -144,7 +164,9 @@ class User(ResourceBase):
         """
 
         if not self._sensu_client:
-            raise SensuClientError(f"Could not create '{self.__class__.__name__}' object without a client")
+            raise SensuClientError(
+                f"Could not create '{self.__class__.__name__}' object without a client"
+            )
 
         password_hash = hash_password(new_password)
         reset_obj = UserChangePassword(
@@ -162,11 +184,13 @@ class User(ResourceBase):
         """
 
         if not self._sensu_client:
-            raise SensuClientError(f"Could not create '{self.__class__.__name__}' object without a client")
+            raise SensuClientError(
+                f"Could not create '{self.__class__.__name__}' object without a client"
+            )
 
         result = self._sensu_client.resource_put(
             obj=self,
-            url=cls.BASE_URL + f"/{self.username}/reinstate"
+            url=self.BASE_URL + f"/{self.username}/reinstate"
         )
         if result:
             self.disabled = False

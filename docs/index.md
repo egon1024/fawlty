@@ -1,4 +1,4 @@
-# Fawlty Documentation
+# fawlty Documentation
 
 Library for interacting with a SensuGo server.
 

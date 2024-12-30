@@ -21,7 +21,7 @@ class SensuToken(BaseModel):
     refresh_token: str
     _refresh_threshold: int = DEFAULT_THRESHOLD
 
-    def is_expired(self)-> bool:
+    def is_expired(self) -> bool:
         """
         Check if the sensu token is expired.
 
@@ -29,8 +29,7 @@ class SensuToken(BaseModel):
         """
         return time.time() > self.expires_at
 
-
-    def need_refresh(self)-> bool:
+    def need_refresh(self) -> bool:
         """
         Check if the sensu token needs to be refreshed.
 
