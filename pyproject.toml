@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fawlty"
-version = "0.0.2"
+version = "0.0.3"
 description = "A Python library for interacting with a SensuGo server"
 authors = ["Cole Tuininga <cole.tuininga@gmail.com>"]
 license = "MIT"
