@@ -11,7 +11,7 @@ from pydantic import ValidationError
 
 # Our imports
 from fawlty.sensu_token import SensuToken
-from fawlty.exception import (
+from fawlty.exceptions import (
     SensuConnectionError, SensuNeedRefresh,
     SensuAuthError, SensuNeedLogin,
     SensuResourceError, SensuError
@@ -26,7 +26,7 @@ def debug_r(r: object):
     print(f"Text: {r.text}")
 
 
-class SensuClient(object):
+class SensuClient:
     """
     A class to act as a Sensu client.
     """
@@ -137,7 +137,7 @@ class SensuClient(object):
         resources = []
         for _ in r.json():
             obj = cls(**_)
-            obj._sensu_client = self
+            obj.set_client(self)
             resources.append(obj)
 
         return resources
@@ -151,7 +151,7 @@ class SensuClient(object):
         try:
             obj.model_validate(obj)
         except ValidationError as err:
-            raise SensuResourceError(str(err))
+            raise SensuResourceError(str(err)) from err
 
         if url is None:
             url = obj.urlify(purpose="create")
@@ -171,7 +171,7 @@ class SensuClient(object):
         try:
             obj.model_validate(obj)
         except ValidationError as err:
-            raise SensuResourceError(str(err))
+            raise SensuResourceError(str(err)) from err
 
         if url is None:
             url = obj.urlify()

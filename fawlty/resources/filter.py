@@ -33,6 +33,9 @@ class Filter(ResourceBase):
 
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the namespaced version of the class method.
+        """
         return cls.get_url_with_namespace(*args, **kwargs)
 
     def urlify(self, purpose: str = None) -> str:

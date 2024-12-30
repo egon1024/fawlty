@@ -1,3 +1,7 @@
+"""
+Import all of the modules from the resource directory
+"""
+
 import os
 import importlib
 

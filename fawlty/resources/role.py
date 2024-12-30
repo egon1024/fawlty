@@ -5,12 +5,12 @@ A module to represent a Sensu role resource
 # Built in imports
 from typing import Optional, List, Literal, ClassVar
 
+# 3rd party imports
+from pydantic import BaseModel, validator
+
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
 from fawlty.sensu_client import SensuClient
-
-# 3rd party imports
-from pydantic import BaseModel, validator
 
 
 class RoleMetadata(MetadataWithNamespace):
@@ -38,12 +38,18 @@ class RoleRule(BaseModel):
 
     @validator("verbs")
     def validate_verbs(cls, value):
+        """
+        Make sure the verb(s) passed in are valid
+        """
         if "*" in value and len(value) > 1:
             raise ValueError("if '*' is in the list, it must be the only item.")
         return value
 
     @validator("resources")
     def validate_resources(cls, value):
+        """
+        Make sure the list of resources is valid
+        """
         if "*" in value and len(value) > 1:
             raise ValueError("if '*' is in the list, it must be the only item.")
         return value
@@ -62,6 +68,9 @@ class Role(ResourceBase):
 
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the namespaced version of the class method.
+        """
         return cls.get_url_with_namespace(*args, **kwargs)
 
     def urlify(self, purpose: str = None) -> str:

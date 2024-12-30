@@ -4,14 +4,14 @@ A module to represent a Sensu user resource
 # Built in imports
 from typing import Optional, List, ClassVar
 
+# 3rd party imports
+from pydantic import validator
+import bcrypt
+
 # Our imports
 from fawlty.resources.base import ResourceBase
 from fawlty.sensu_client import SensuClient
 from fawlty.exceptions import SensuClientError
-
-# 3rd party imports
-from pydantic import validator
-import bcrypt
 
 
 def hash_password(passwd: str) -> str:
@@ -19,10 +19,10 @@ def hash_password(passwd: str) -> str:
     Takes a password and switches it to a hashed form for use in Sensu
     """
 
-    bytes = passwd.encode('utf-8')
+    pw_bytes = passwd.encode('utf-8')
     salt = bcrypt.gensalt()
-    hash = bcrypt.hashpw(bytes, salt)
-    hashed_str = hash.decode('utf-8')
+    pw_hash = bcrypt.hashpw(pw_bytes, salt)
+    hashed_str = pw_hash.decode('utf-8')
 
     return hashed_str
 
@@ -40,8 +40,12 @@ class UserPasswordReset(ResourceBase):
 
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the non-namespaced version of the class method.
+        """
         return cls.get_url_without_namespace(*args, **kwargs)
 
+    # pylint: disable=W0613
     def urlify(self, purpose: str = None) -> str:
         """
         Provide the url for reseting the user's password
@@ -67,8 +71,12 @@ class UserChangePassword(ResourceBase):
 
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the non-namespaced version of the class method.
+        """
         return cls.get_url_without_namespace(*args, **kwargs)
 
+    # pylint: disable=W0613
     def urlify(self, purpose: str = None) -> str:
         """
         Provide the url for reseting the user's password
@@ -93,6 +101,9 @@ class User(ResourceBase):
 
     @validator("password")
     def validate_password(cls, value):
+        """
+        Perform VERY basic validation on the password.  We'll let sensu do the rest.
+        """
         if value is not None and len(value) < 8:
             raise ValueError("Password must be at least 8 characters long")
         return value
@@ -101,6 +112,9 @@ class User(ResourceBase):
 
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the non-namespaced version of the class method.
+        """
         return cls.get_url_without_namespace(*args, **kwargs)
 
     def urlify(self, purpose: str = None) -> str:

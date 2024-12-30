@@ -4,12 +4,12 @@ A module to represent a Sensu entity resource
 # Built in imports
 from typing import Optional, List, Dict, Literal, Any, ClassVar
 
+# 3rd party imports
+from pydantic import validator
+
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
 from fawlty.sensu_client import SensuClient
-
-# 3rd party imports
-from pydantic import validator
 
 
 class EntityMetadata(MetadataWithNamespace):
@@ -37,6 +37,9 @@ class Entity(ResourceBase):
 
     @validator("deregistration")
     def validate_deregistration(cls, value):
+        """
+        Validate the deregistration value
+        """
 
         # Allow an empty dictionary or None
         if not value:
@@ -56,6 +59,9 @@ class Entity(ResourceBase):
 
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the namespaced version of the class method.
+        """
         return cls.get_url_with_namespace(*args, **kwargs)
 
     def urlify(self, purpose: str = None) -> str:

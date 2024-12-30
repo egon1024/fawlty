@@ -5,12 +5,12 @@ A module containing a base class to use for Sensu resource objects
 # Built in imports
 from typing import Optional, Dict
 
-# Our imports
-from fawlty.exception import SensuClientError
-from fawlty.sensu_client import SensuClient
-
 # 3rd party imports
 from pydantic import BaseModel
+
+# Our imports
+from fawlty.exceptions import SensuClientError
+from fawlty.sensu_client import SensuClient
 
 ###
 # TODO:
@@ -27,8 +27,22 @@ class ResourceBase(BaseModel):
     A Base class to use for Sensu resource objects
     """
 
+    def __init__(self, *args, **kwargs):
+        """
+        Instance initialization
+        """
+
+        super().__init__(*args, **kwargs)
+
+        self._sensu_client = None
+
+
     # Needed to set arbitrary items like BASE_URL and the get_url method
+    # pylint: disable=R0903
     class Config:
+        """
+        Config class to guide pydantic configuration
+        """
         arbitrary_types_allowed = True
 
     def set_client(self, client: SensuClient):

@@ -5,12 +5,12 @@ A module to represent a Sensu clusterrole resource
 # Built in imports
 from typing import Optional, List, Literal, ClassVar
 
+# 3rd party imports
+from pydantic import BaseModel, validator
+
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithoutNamespace
 from fawlty.sensu_client import SensuClient
-
-# 3rd party imports
-from pydantic import BaseModel, validator
 
 
 class ClusterRoleMetadata(MetadataWithoutNamespace):
@@ -42,12 +42,18 @@ class ClusterRoleRule(BaseModel):
 
     @validator("verbs")
     def validate_verbs(cls, value):
+        """
+        Validate the verb list
+        """
         if "*" in value and len(value) > 1:
             raise ValueError("if '*' is in the list, it must be the only item.")
         return value
 
     @validator("resources")
     def validate_resources(cls, value):
+        """
+        Validate the resource list
+        """
         if "*" in value and len(value) > 1:
             raise ValueError("if '*' is in the list, it must be the only item.")
         return value
@@ -66,6 +72,9 @@ class ClusterRole(ResourceBase):
 
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the non-namespaced version of the class method.
+        """
         return cls.get_url_without_namespace(*args, **kwargs)
 
     def urlify(self, purpose: str = None) -> str:

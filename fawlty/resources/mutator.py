@@ -5,12 +5,12 @@ A module for Sensu mutator resources.
 # Built in imports
 from typing import Optional, List, Dict, Literal, ClassVar
 
+# 3rd party imports
+from pydantic import model_validator
+
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
 from fawlty.sensu_client import SensuClient
-
-# 3rd party imports
-from pydantic import model_validator
 
 
 class MutatorMetadata(MetadataWithNamespace):
@@ -35,6 +35,10 @@ class Mutator(ResourceBase):
 
     @model_validator(mode='after')
     def check_fields(self):
+        """
+        Validate the values of the fields in the instance
+        """
+
         # If type is pipe, command should be set and eval should not
         if self.type == "pipe":
             if not self.command:
@@ -62,6 +66,9 @@ class Mutator(ResourceBase):
 
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the namespaced version of the class method.
+        """
         return cls.get_url_with_namespace(*args, **kwargs)
 
     def urlify(self, purpose: str = None) -> str:

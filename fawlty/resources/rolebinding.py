@@ -5,12 +5,12 @@ A module to represent a Sensu rolebinding resource
 # Built in imports
 from typing import Optional, List, Literal, ClassVar
 
+# 3rd party imports
+from pydantic import BaseModel
+
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
 from fawlty.sensu_client import SensuClient
-
-# 3rd party imports
-from pydantic import BaseModel
 
 
 class RoleBindingMetadata(MetadataWithNamespace):
@@ -49,6 +49,9 @@ class RoleBinding(ResourceBase):
 
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the namespaced version of the class method.
+        """
         return cls.get_url_with_namespace(*args, **kwargs)
 
     def urlify(self, purpose: str = None) -> str:

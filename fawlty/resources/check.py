@@ -6,12 +6,12 @@ A module for Sensu check resources.
 import re
 from typing import Optional, List, Dict, Literal, ClassVar
 
+# 3rd party imports
+from pydantic import BaseModel, model_validator, validator
+
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
 from fawlty.sensu_client import SensuClient
-
-# 3rd party imports
-from pydantic import BaseModel, model_validator, validator
 
 # Constants
 PROXY_NAME_RE = re.compile(r'^[\w\.\-]+$')
@@ -32,12 +32,18 @@ class CheckMetricTag(BaseModel):
 
 
 class CheckMetricThreshold(BaseModel):
+    """
+    A class to represent the data structure of a metric threshold
+    """
     max: Optional[str] = None
     min: Optional[str] = None
     status: int
 
     @model_validator(mode='after')
     def check_fields(self):
+        """
+        Verify the provided fields have acceptable values
+        """
         if self.max is None and self.min is None:
             raise ValueError("Threshold must define at least one of 'max' or 'min'")
 
@@ -45,6 +51,9 @@ class CheckMetricThreshold(BaseModel):
 
 
 class CheckOutputMetricThreshold(BaseModel):
+    """
+    A class to represent the data structure of an output metric threshold
+    """
     name: str
     tags: Optional[List[CheckMetricTag]] = None
     null_status: Optional[int] = 0
@@ -52,18 +61,27 @@ class CheckOutputMetricThreshold(BaseModel):
 
 
 class CheckPipeline(BaseModel):
+    """
+    A class to represent the data structure of a check pipeline
+    """
     api_version: str = 'core/v2'
     name: str
     type: str = 'Pipeline'
 
 
 class CheckProxyRequests(BaseModel):
+    """
+    A class to represent the data structure of a check proxy requests
+    """
     entity_attributes: Optional[List[str]] = None
     splay: Optional[bool] = False
     splay_coverage: Optional[int] = None
 
     @model_validator(mode='after')
     def check_fields(self):
+        """
+        Validate the fields for the instance
+        """
         if self.splay and self.splay_coverage is None:
             raise ValueError("'splay_coverage' must be set when 'splay' is True")
 
@@ -71,11 +89,17 @@ class CheckProxyRequests(BaseModel):
 
 
 class CheckSecret(BaseModel):
+    """
+    A class to represent the data structure of a check secret
+    """
     name: str
     secret: str
 
 
 class CheckSubdue(BaseModel):
+    """
+    A class to represent the data structure of a check subdue
+    """
     begin: str
     end: str
     repeat: Optional[List[Literal[
@@ -126,10 +150,16 @@ class Check(ResourceBase):
 
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the namespaced version of the class method.
+        """
         return cls.get_url_with_namespace(*args, **kwargs)
 
     @validator("proxy_entity_name")
     def validate_proxy_entity_name(cls, value):
+        """
+        Validate the that name given for a proxy entity is acceptable.
+        """
         # Special case, we'll switch empty string to None
         if value == '':
             return None
@@ -141,6 +171,9 @@ class Check(ResourceBase):
 
     @validator("subscriptions")
     def validate_subscriptions(cls, value):
+        """
+        Validate that the subscription list is acceptable.
+        """
         if len(value) < 1:
             raise ValueError("Subscription list must have at least one subscription name in it.")
 

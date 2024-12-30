@@ -4,12 +4,12 @@ A module to represent a Sensu clusterrolebinding resource
 # Built in imports
 from typing import Optional, List, Literal, ClassVar
 
+# 3rd party imports
+from pydantic import BaseModel
+
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithoutNamespace
 from fawlty.sensu_client import SensuClient
-
-# 3rd party imports
-from pydantic import BaseModel
 
 
 class ClusterRoleBindingMetadata(MetadataWithoutNamespace):
@@ -47,6 +47,9 @@ class ClusterRoleBinding(ResourceBase):
 
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the non-namespaced version of the class method.
+        """
         return cls.get_url_without_namespace(*args, **kwargs)
 
     def urlify(self, purpose: str = None) -> str:

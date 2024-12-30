@@ -5,12 +5,12 @@ A module for Sensu silence resources.
 # Built in imports
 from typing import Optional, ClassVar
 
+# 3rd party imports
+from pydantic import model_validator
+
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
 from fawlty.sensu_client import SensuClient
-
-# 3rd party imports
-from pydantic import model_validator
 
 
 class SilenceMetadata(MetadataWithNamespace):
@@ -20,6 +20,9 @@ class SilenceMetadata(MetadataWithNamespace):
 
 
 class Silence(ResourceBase):
+    """
+    A class to represent a Sensu silence resource
+    """
     check: Optional[str] = None
     subscription: Optional[str] = None
     begin: int = None
@@ -33,6 +36,9 @@ class Silence(ResourceBase):
 
     @model_validator(mode='after')
     def check_fields(self):
+        """
+        Validate the fields of a Silence instance
+        """
         # If neither "check" nor "subscription" is set, there's a problem
         if not self.check and not self.subscription:
             raise ValueError("One of either 'check' or 'subscription' must be set.")
@@ -43,6 +49,9 @@ class Silence(ResourceBase):
 
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the namespaced version of the class method.
+        """
         return cls.get_url_with_namespace(*args, **kwargs)
 
     def urlify(self, purpose: str = None) -> str:

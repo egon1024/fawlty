@@ -22,6 +22,9 @@ class Namespace(ResourceBase):
 
     @classmethod
     def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the non-namespaced version of the class method.
+        """
         return cls.get_url_without_namespace(*args, **kwargs)
 
     def urlify(self, purpose: str = None) -> str:
