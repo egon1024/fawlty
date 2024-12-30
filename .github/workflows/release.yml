@@ -66,6 +66,7 @@ jobs:
           git fetch origin gh-pages:gh-pages
           git checkout gh-pages
           git pull origin gh-pages
+          git checkout main
 
       - name: Deploy Documentation
         run: |
