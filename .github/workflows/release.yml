@@ -69,8 +69,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/fawlty-${{ env.PACKAGE_VERSION }}-none-any.whl
-          asset_name: fawlty-${{ env.PACKAGE_VERSION }}-none-any.whl
+          asset_path: dist/fawlty-${{ env.PACKAGE_VERSION }}-py3-none-any.whl
+          asset_name: fawlty-${{ env.PACKAGE_VERSION }}-py3-none-any.whl
           asset_content_type: application/gzip
 
       - name: Pull gh-pages branch
