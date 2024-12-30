@@ -36,9 +36,9 @@ class ResourceBase(BaseModel):
 
         self._sensu_client = None
 
-
     # Needed to set arbitrary items like BASE_URL and the get_url method
     # pylint: disable=R0903
+
     class Config:
         """
         Config class to guide pydantic configuration
