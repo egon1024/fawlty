@@ -59,6 +59,14 @@ jobs:
           echo "Create release"
           gh release create ${{ env.PACKAGE_VERSION }} --generate-notes --latest
 
+      - name: Pull gh-pages branch
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin gh-pages:gh-pages
+          git checkout gh-pages
+          git pull origin gh-pages
+
       - name: Deploy Documentation
         run: |
           make deploy-docs
