@@ -27,7 +27,7 @@ class SensuToken(BaseModel):
 
         :return: True if the sensu token is expired, False otherwise.
         """
-        return time.time() > self.expires_at
+        return int(time.time()) > self.expires_at
 
     def need_refresh(self) -> bool:
         """
@@ -35,4 +35,4 @@ class SensuToken(BaseModel):
 
         :return: True if the sensu token needs to be refreshed, False otherwise.
         """
-        return self.expires_at - time.time() < self._refresh_threshold
+        return self.expires_at - int(time.time()) < self._refresh_threshold
