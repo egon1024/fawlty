@@ -6,26 +6,20 @@ A module containing a base class to use for Sensu resource objects
 from typing import Optional, Dict
 
 # 3rd party imports
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 # Our imports
 from fawlty.exceptions import SensuClientError
 from fawlty.sensu_client import SensuClient
-
-###
-# TODO:
-#
-# Track whether the object has been changed since last write to the sensu
-# server (dirty = T/F perhaps?).  Write ops would be noops if dirty == F.
-# "Force" flag to override
-#
-###
 
 
 class ResourceBase(BaseModel):
     """
     A Base class to use for Sensu resource objects
     """
+
+    # Needed to set arbitrary items like BASE_URL and the get_url method
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     def __init__(self, *args, **kwargs):
         """
@@ -35,15 +29,6 @@ class ResourceBase(BaseModel):
         super().__init__(*args, **kwargs)
 
         self._sensu_client = None
-
-    # Needed to set arbitrary items like BASE_URL and the get_url method
-    # pylint: disable=R0903
-
-    class Config:
-        """
-        Config class to guide pydantic configuration
-        """
-        arbitrary_types_allowed = True
 
     def set_client(self, client: SensuClient):
         """

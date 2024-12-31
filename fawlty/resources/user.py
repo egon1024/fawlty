@@ -5,7 +5,7 @@ A module to represent a Sensu user resource
 from typing import Optional, List, ClassVar
 
 # 3rd party imports
-from pydantic import validator
+from pydantic import field_validator
 import bcrypt
 
 # Our imports
@@ -99,7 +99,7 @@ class User(ResourceBase):
     password: Optional[str] = None
     _sensu_client: Optional[SensuClient] = None
 
-    @validator("password")
+    @field_validator("password")
     def validate_password(cls, value):
         """
         Perform VERY basic validation on the password.  We'll let sensu do the rest.

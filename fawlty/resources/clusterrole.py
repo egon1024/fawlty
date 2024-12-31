@@ -6,7 +6,7 @@ A module to represent a Sensu clusterrole resource
 from typing import Optional, List, Literal, ClassVar
 
 # 3rd party imports
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithoutNamespace
@@ -40,7 +40,7 @@ class ClusterRoleRule(BaseModel):
     ]]
     resource_names: Optional[List[str]] = None
 
-    @validator("verbs")
+    @field_validator("verbs")
     def validate_verbs(cls, value):
         """
         Validate the verb list
@@ -49,7 +49,7 @@ class ClusterRoleRule(BaseModel):
             raise ValueError("if '*' is in the list, it must be the only item.")
         return value
 
-    @validator("resources")
+    @field_validator("resources")
     def validate_resources(cls, value):
         """
         Validate the resource list
