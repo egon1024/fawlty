@@ -1,11 +1,11 @@
-name: Lint
+name: Run Tests
 
-on: 
+on:
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
-  lint:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -24,8 +24,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          poetry install
+          poetry install      
 
-      - name: Run linting
-        run: |
-            make lint
+      - name: Run tests
+        run: make test
