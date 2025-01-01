@@ -57,6 +57,16 @@ class TestMakeCall:
         response = sensu_client._make_call("GET", "/test")
         assert response.status_code == 200
 
+    @patch("fawlty.sensu_client.requests.Session.request")
+    def test_need_refresh(self, mock_request, sensu_client):
+        sensu_client.token = MagicMock(is_expired=lambda: False, need_refresh=lambda: True)
+        mock_request.return_value = MagicMock(status_code=401)
+        sensu_client.refresh_token = MagicMock()
+
+        # Make sure refresh_token is called
+        sensu_client._make_call("GET", "/test")
+        sensu_client.refresh_token.assert_called_once()
+
 
 class TestLogin:
 

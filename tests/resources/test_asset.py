@@ -1,4 +1,8 @@
+"""
+Test cases for the Asset resource.
+"""
 import pytest
+from fawlty.resources.base import ResourceBase, MetadataWithNamespace
 from fawlty.resources.asset import Asset, AssetMetadata
 from fawlty.sensu_client import SensuClient
 
@@ -20,6 +24,7 @@ class TestAssetMetadata:
     def test_asset_metadata(self, asset_metadata):
         assert asset_metadata.name == "test_asset"
         assert asset_metadata.namespace == "default"
+        assert isinstance(asset_metadata, MetadataWithNamespace)
 
 class TestAssetInitialization:
     def test_asset_initialization(self, asset):
@@ -30,6 +35,7 @@ class TestAssetInitialization:
         assert asset.metadata.name == "test_asset"
         assert asset.metadata.namespace == "default"
         assert asset._sensu_client is None
+        assert isinstance(asset, ResourceBase)
 
 class TestAssetMethods:
     def test_asset_get_url(self):
@@ -44,14 +50,8 @@ class TestAssetMethods:
         url = asset.urlify()
         assert url == "/api/core/v2/namespaces/default/assets/test_asset"
 
-## Assuming ResourceBase has methods you want to test
-#class TestResourceBaseMethods:
-#    def test_resource_base_method1(self, asset):
-#        # Replace with actual method and assertions
-#        result = asset.method1()
-#        assert result == "expected_result"
-#
-#    def test_resource_base_method2(self, asset):
-#        # Replace with actual method and assertions
-#        result = asset.method2()
-#        assert result == "expected_result"
+class TestResourceBaseMethods:
+    def test_set_client(self, asset):
+        client = SensuClient()
+        asset.set_client(client)
+        assert asset._sensu_client == client
