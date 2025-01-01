@@ -1,7 +1,13 @@
 """
 Test cases for the Asset resource.
 """
+
+# Built in imports
+
+# 3rd party imports
 import pytest
+
+# Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
 from fawlty.resources.asset import Asset, AssetMetadata
 from fawlty.sensu_client import SensuClient
