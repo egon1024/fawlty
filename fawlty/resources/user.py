@@ -146,7 +146,7 @@ class User(ResourceBase):
 
         if not self._sensu_client:
             raise SensuClientError(
-                f"Could not reset password for object without a client"
+                "Could not reset password for object without a client"
             )
 
         password_hash = hash_password(new_password)
