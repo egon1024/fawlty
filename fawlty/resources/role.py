@@ -6,7 +6,7 @@ A module to represent a Sensu role resource
 from typing import Optional, List, Literal, ClassVar
 
 # 3rd party imports
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
@@ -36,7 +36,7 @@ class RoleRule(BaseModel):
     ]]
     resource_names: Optional[List[str]] = None
 
-    @validator("verbs")
+    @field_validator("verbs")
     def validate_verbs(cls, value):
         """
         Make sure the verb(s) passed in are valid
@@ -45,7 +45,7 @@ class RoleRule(BaseModel):
             raise ValueError("if '*' is in the list, it must be the only item.")
         return value
 
-    @validator("resources")
+    @field_validator("resources")
     def validate_resources(cls, value):
         """
         Make sure the list of resources is valid

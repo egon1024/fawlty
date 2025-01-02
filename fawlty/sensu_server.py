@@ -24,10 +24,3 @@ class SensuServer(BaseModel):
         :return: The API URL.
         """
         return f"http{'s' if self.use_ssl else ''}://{self.host}:{self.port}"
-
-    def urlify(self) -> str:
-        """
-        Just a base class placeholder to help remind subclasses to implement this method.
-        """
-
-        raise NotImplementedError("Subclasses must implement this method")

@@ -7,7 +7,7 @@ import re
 from typing import Optional, List, Dict, Literal, ClassVar
 
 # 3rd party imports
-from pydantic import BaseModel, model_validator, validator
+from pydantic import BaseModel, model_validator, field_validator
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
@@ -155,7 +155,7 @@ class Check(ResourceBase):
         """
         return cls.get_url_with_namespace(*args, **kwargs)
 
-    @validator("proxy_entity_name")
+    @field_validator("proxy_entity_name")
     def validate_proxy_entity_name(cls, value):
         """
         Validate the that name given for a proxy entity is acceptable.
@@ -169,7 +169,7 @@ class Check(ResourceBase):
 
         return value
 
-    @validator("subscriptions")
+    @field_validator("subscriptions")
     def validate_subscriptions(cls, value):
         """
         Validate that the subscription list is acceptable.

@@ -13,5 +13,10 @@ deploy-docs:
 # Lint the code
 .PHONY: lint
 lint:
-	poetry run flake8 .
+	poetry run flake8 fawlty
 	poetry run pylint fawlty
+
+# Run the tests
+.PHONY: test
+test:
+	poetry run pytest --cov=fawlty tests/

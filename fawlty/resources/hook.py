@@ -31,6 +31,13 @@ class Hook(ResourceBase):
 
     BASE_URL: ClassVar[str] = "/api/core/v2/namespaces/{namespace}/hooks"
 
+    @classmethod
+    def get_url(cls, *args, **kwargs) -> str:
+        """
+        Use the namespaced version of the class method.
+        """
+        return cls.get_url_with_namespace(*args, **kwargs)
+
     def urlify(self, purpose: str = None) -> str:
         """
         Return the URL for the hook resource(s).

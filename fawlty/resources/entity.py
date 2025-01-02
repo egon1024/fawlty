@@ -5,7 +5,7 @@ A module to represent a Sensu entity resource
 from typing import Optional, List, Dict, Literal, Any, ClassVar
 
 # 3rd party imports
-from pydantic import validator
+from pydantic import field_validator
 
 # Our imports
 from fawlty.resources.base import ResourceBase, MetadataWithNamespace
@@ -35,7 +35,7 @@ class Entity(ResourceBase):
     user: Optional[str] = "agent"
     _sensu_client: Optional[SensuClient] = None
 
-    @validator("deregistration")
+    @field_validator("deregistration")
     def validate_deregistration(cls, value):
         """
         Validate the deregistration value

@@ -4,3 +4,4 @@ TODO items
 * Pipelines
 * API Keys
 * Secrets stuff
+* Keep a "is_dirty" flag on objects to know if they should be written.  Allow a "force=True" arg to push changes regardless of the state of the flag.
