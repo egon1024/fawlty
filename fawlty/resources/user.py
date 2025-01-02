@@ -95,7 +95,7 @@ class User(ResourceBase):
 
     username: str
     groups: List[str]
-    disabled: bool
+    disabled: Optional[bool] = False
     password: Optional[str] = None
     _sensu_client: Optional[SensuClient] = None
 
@@ -137,6 +137,7 @@ class User(ResourceBase):
         """
 
         self.delete()
+        self.disabled = True
 
     def reset_password(self, new_password: str):
         """
@@ -145,7 +146,7 @@ class User(ResourceBase):
 
         if not self._sensu_client:
             raise SensuClientError(
-                f"Could not create '{self.__class__.__name__}' object without a client"
+                f"Could not reset password for object without a client"
             )
 
         password_hash = hash_password(new_password)
