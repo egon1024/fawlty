@@ -1,7 +1,6 @@
 site_name: fawlty
 nav:
   - Home: index.md
-  - About: about.md
   - Client: client.md
   - Resources: 
     - Overview: resources/overview.md
@@ -10,6 +9,7 @@ nav:
     - ClusterRole: resources/clusterrole.md
     - ClusterRoleBinding: resources/clusterrolebinding.md
     - Entity: resources/entity.md
+    - Event: resources/event.md
     - Filter: resources/filter.md
     - Handler: resources/handler.md
     - Hook: resources/hook.md

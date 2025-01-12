@@ -20,3 +20,8 @@ lint:
 .PHONY: test
 test:
 	poetry run pytest --cov=fawlty tests/
+
+# Include reports of uncovered lines in the output
+.PHONY: test_line_report
+test_line_report:
+	poetry run pytest --cov=fawlty --cov-report=term-missing tests/
