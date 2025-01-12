@@ -5,15 +5,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <link rel="shortcut icon" href="../../img/favicon.ico" />
-    <title>Role - fawlty</title>
+    <title>Event - fawlty</title>
     <link rel="stylesheet" href="../../css/theme.css" />
     <link rel="stylesheet" href="../../css/theme_extra.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
     
       <script>
         // Current page data
-        var mkdocs_page_name = "Role";
-        var mkdocs_page_input_path = "resources/role.md";
+        var mkdocs_page_name = "Event";
+        var mkdocs_page_input_path = "resources/event.md";
         var mkdocs_page_url = null;
       </script>
     
@@ -61,7 +61,15 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../entity/">Entity</a>
                   </li>
-                  <li class="toctree-l1"><a class="reference internal" href="../event/">Event</a>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Event</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#sensu_documentation">Sensu documentation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#class_event">Class: Event</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#other_classes">Other Classes</a>
+    </li>
+    </ul>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../filter/">Filter</a>
                   </li>
@@ -73,15 +81,7 @@
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../namespace/">Namespace</a>
                   </li>
-                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Role</a>
-    <ul class="current">
-    <li class="toctree-l2"><a class="reference internal" href="#sensu_documentation">Sensu documentation</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#class_role">Class: Role</a>
-    </li>
-    <li class="toctree-l2"><a class="reference internal" href="#other_classes">Other Classes</a>
-    </li>
-    </ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../role/">Role</a>
                   </li>
                   <li class="toctree-l1"><a class="reference internal" href="../rolebinding/">RoleBinding</a>
                   </li>
@@ -105,7 +105,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
           <li class="breadcrumb-item">Resources</li>
-      <li class="breadcrumb-item active">Role</li>
+      <li class="breadcrumb-item active">Event</li>
     <li class="wy-breadcrumbs-aside">
     </li>
   </ul>
@@ -114,58 +114,54 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
             <div class="section" itemprop="articleBody">
               
-                <h1 id="role">Role<a class="headerlink" href="#role" title="Permanent link">&para;</a></h1>
+                <h1 id="asset">Asset<a class="headerlink" href="#asset" title="Permanent link">&para;</a></h1>
 <h2 id="sensu_documentation">Sensu documentation<a class="headerlink" href="#sensu_documentation" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="https://docs.sensu.io/sensu-go/latest/operations/control-access/rbac/#roles">Role</a></li>
-<li><a href="https://docs.sensu.io/sensu-go/latest/api/core/roles/">API</a></li>
+<li><a href="https://docs.sensu.io/sensu-go/latest/observability-pipeline/observe-events/events/">Events</a></li>
+<li><a href="https://docs.sensu.io/sensu-go/latest/api/core/events/">API</a></li>
 </ul>
-<h2 id="class_role">Class: Role<a class="headerlink" href="#class_role" title="Permanent link">&para;</a></h2>
-<p>This class represents a Sensu role.  </p>
-<p>The fields for a role are:</p>
-<ul>
-<li><code>rules</code> (list)</li>
-<li><code>metadata</code> (RoleMetadata)</li>
-</ul>
+<h2 id="class_event">Class: Event<a class="headerlink" href="#class_event" title="Permanent link">&para;</a></h2>
+<p>This class represents a Sensu event.  </p>
 <p>Example:</p>
-<pre class="highlight"><code class="language-python">from fawlty.resource.role import Role
+<pre class="highlight"><code class="language-python">from fawlty.resource.event import Event
 
-data = {
-    "metadata": {
-        "name": "basic-read",
-        "labels": {"donottalkabout": "thewar"},
-        "annotations": {"hotel": "inspectors"},
-        "namespace": "default",
-    }, 
-    "rules": [
-        {
-            "resource_names": None,
-            "resources": ["entities", "checks", "events"],
-            "verbs": ["get", "list"],
-        },
-        {
-            "resource_names": None,
-            "resources": ["namespaces"],
-            "verbs": ["list"]
-        },
-    ]
-}
-
-a = Role(**data)
+a = Asset(**data)
 a.set_client(my_client)
-a.create()</code></pre>
+a.create()
+
+events = my_client.resource_get(
+    cls=fawlty.resources.event.Event,
+    get_url=fawlty.resources.event.Event.get_url(namespace="default")
+)
+
+for event in events:
+    if event.check.state != "passing":
+       print("XX Event: "
+        f"{event.entity.metadata.name}/{event.check.metadata.name}:  "
+        f"{event.check.state}")
+    else:
+       print(" * Event: "
+        f"{event.entity.metadata.name}/{event.check.metadata.name}:  "
+        f"{event.check.state}")</code></pre>
 <h2 id="other_classes">Other Classes<a class="headerlink" href="#other_classes" title="Permanent link">&para;</a></h2>
-<p>These classes should usually not need to be addressed directly, but can instead be referenced via data structure in the <a href="#class_role">Role</a> class (see example above).</p>
+<p>There are several auxilary classes that accompany events, many because they are very similar to the "normal" resource counterpart, but with addtional fields.</p>
 <ul>
-<li>RoleMetadata</li>
-<li>RoleRule</li>
+<li>EventMetadata</li>
+<li>EventCheckMetadata</li>
+<li>EventCheckHistory</li>
+<li>EventCheckMetricTag</li>
+<li>EvenCheckSecret</li>
+<li>EventCheckSubdue</li>
+<li>EventCheck</li>
+<li>EventEntityMetadata</li>
+<li>EventEntity</li>
 </ul>
               
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="../namespace/" class="btn btn-neutral float-left" title="Namespace"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-        <a href="../rolebinding/" class="btn btn-neutral float-right" title="RoleBinding">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../entity/" class="btn btn-neutral float-left" title="Entity"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../filter/" class="btn btn-neutral float-right" title="Filter">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
   <hr/>
@@ -188,10 +184,10 @@ a.create()</code></pre>
   <span class="rst-current-version" data-toggle="rst-current-version">
     
     
-      <span><a href="../namespace/" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="../entity/" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
-      <span><a href="../rolebinding/" style="color: #fcfcfc">Next &raquo;</a></span>
+      <span><a href="../filter/" style="color: #fcfcfc">Next &raquo;</a></span>
     
   </span>
 </div>
