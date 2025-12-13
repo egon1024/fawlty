@@ -4,6 +4,8 @@ Implements a class to act as a Sensu client.
 
 # Built in imports
 import json
+import os
+import urllib3
 
 # 3rd party imports
 import requests
@@ -16,6 +18,42 @@ from fawlty.exceptions import (
     SensuAuthError, SensuNeedLogin,
     SensuResourceError, SensuError
 )
+
+
+def get_system_ca_bundle():
+    """
+    Get the path to the system CA certificate bundle.
+    Returns None if not found, which tells requests to use its default certifi bundle.
+    """
+    # Common locations for system CA bundles
+    ca_bundle_paths = [
+        # Debian/Ubuntu/Gentoo etc.
+        '/etc/ssl/certs/ca-certificates.crt',
+        # RedHat/Fedora/CentOS
+        '/etc/pki/tls/certs/ca-bundle.crt',
+        # OpenSUSE
+        '/etc/ssl/ca-bundle.pem',
+        # OpenBSD
+        '/etc/ssl/cert.pem',
+        # macOS (Homebrew)
+        '/usr/local/etc/openssl/cert.pem',
+        '/usr/local/etc/openssl@1.1/cert.pem',
+        # macOS (system)
+        '/etc/ssl/cert.pem',
+    ]
+
+    # Check environment variables first
+    for env_var in ['REQUESTS_CA_BUNDLE', 'CURL_CA_BUNDLE', 'SSL_CERT_FILE']:
+        if env_var in os.environ and os.path.isfile(os.environ[env_var]):
+            return os.environ[env_var]
+
+    # Check common paths
+    for path in ca_bundle_paths:
+        if os.path.isfile(path):
+            return path
+
+    # Fall back to None, which means use certifi's default bundle
+    return None
 
 
 def debug_r(r: object):
@@ -42,6 +80,19 @@ class SensuClient:
         self.token = None
         self.session = requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
+
+        # Configure SSL verification
+        if server and server.ignore_cert:
+            # Disable SSL verification completely
+            self.session.verify = False
+            # Disable SSL warnings when ignoring certificates
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        elif server and server.use_ssl:
+            # Use system CA bundle for SSL verification
+            ca_bundle = get_system_ca_bundle()
+            if ca_bundle:
+                self.session.verify = ca_bundle
+            # else: leave as default (True), which uses certifi bundle
 
     def call_filter(self):
         """
@@ -81,7 +132,6 @@ class SensuClient:
         if isinstance(fields, dict):
             fields = json.dumps(fields)
 
-        # TODO - Add ssl param(s)
         r = self.session.request(method, url, data=fields)
 
         return r
@@ -94,7 +144,6 @@ class SensuClient:
         :param password: The password to login with.
         """
 
-        # TODO - Add ssl param(s)
         # TODO - Add error handling
         self.session.headers.pop("Authorization", None)
         r = self.session.get(self.server.api_url + "/auth", auth=(username, password))
@@ -111,7 +160,6 @@ class SensuClient:
         """
         Refresh the token with the Sensu server."""
 
-        # TODO - Add ssl param(s)
         data = {"refresh_token": self.token.refresh_token}
         r = self._make_call("POST", "/auth/token", fields=data, use_filter=False)
 
