@@ -51,12 +51,24 @@
     <li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a>
         <ul>
     <li class="toctree-l3"><a class="reference internal" href="#sensuserver">SensuServer</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#ssl_certificate_handling">SSL Certificate Handling</a>
+    </li>
+        </ul>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#sensuclient">SensuClient</a>
     </li>
         </ul>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#sample_code">Sample code</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#basic_usage_http">Basic Usage (HTTP)</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ssl_with_certificate_verification">SSL with Certificate Verification</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#ssl_without_certificate_verification_development_only">SSL without Certificate Verification (Development Only)</a>
+    </li>
+        </ul>
     </li>
     </ul>
                 </li>
@@ -129,9 +141,20 @@
 <ul>
 <li><code>host</code> (required) The hostname or IP address of the Sensu server</li>
 <li><code>port</code> Integer representing the port number to connect to.  (<em>Default: 8080</em>)</li>
-<li><code>use_ssl</code>: Boolean indicating whether the connection should be ssl encrypted. (<em>Default: False</em>)</li>
-<li><code>ignore_cert</code>: Boolean indicating if the remote certificate validation should be performed.  Set to True when connecting to a server using a self-signed certificate, to avoid errors. (<em>Default: False</em>)</li>
+<li><code>use_ssl</code>: Boolean indicating whether the connection should be SSL encrypted. (<em>Default: False</em>)</li>
+<li><code>ignore_cert</code>: Boolean indicating if remote certificate validation should be skipped. Set to <code>True</code> to disable SSL certificate verification entirely (not recommended for production). (<em>Default: False</em>)</li>
 </ul>
+<h4 id="ssl_certificate_handling">SSL Certificate Handling<a class="headerlink" href="#ssl_certificate_handling" title="Permanent link">&para;</a></h4>
+<p>When <code>use_ssl=True</code> and <code>ignore_cert=False</code>, the client will verify SSL certificates using the system's CA certificate bundle. This allows connections to servers with certificates signed by custom CAs (such as self-signed certificates) as long as the CA certificate has been installed in the system's certificate store.</p>
+<p>The client automatically searches for system CA bundles in common locations:</p>
+<ul>
+<li>Environment variables: <code>REQUESTS_CA_BUNDLE</code>, <code>CURL_CA_BUNDLE</code>, <code>SSL_CERT_FILE</code></li>
+<li>Debian/Ubuntu: <code>/etc/ssl/certs/ca-certificates.crt</code></li>
+<li>RedHat/Fedora/CentOS: <code>/etc/pki/tls/certs/ca-bundle.crt</code></li>
+<li>OpenSUSE: <code>/etc/ssl/ca-bundle.pem</code></li>
+<li>macOS: <code>/usr/local/etc/openssl/cert.pem</code>, <code>/etc/ssl/cert.pem</code></li>
+</ul>
+<p>If no system CA bundle is found, the client falls back to the default certifi bundle included with the requests library.</p>
 <h3 id="sensuclient">SensuClient<a class="headerlink" href="#sensuclient" title="Permanent link">&para;</a></h3>
 <pre class="highlight"><code class="language-python">from fawlty.sensu_server import SensuServer
 from fawlty.sensu_client import SensuClient</code></pre>
@@ -139,6 +162,7 @@ from fawlty.sensu_client import SensuClient</code></pre>
 <p>Currently, login only supports username/password and not an API token.   After instantiation (which requires a (#SensuServer) object), the <code>login</code> method of the instance will establish a session with the Sensu API.</p>
 <p>After login, the API will provide a session token which will be tracked by the client object in the <code>token</code> attribute.  The client object will attempt to refresh a token if it is discovered to be close to expiration.  If the application code wishes to refresh a token, it can do so by calling the <code>refresh_token</code> method of the client instance.</p>
 <h2 id="sample_code">Sample code<a class="headerlink" href="#sample_code" title="Permanent link">&para;</a></h2>
+<h3 id="basic_usage_http">Basic Usage (HTTP)<a class="headerlink" href="#basic_usage_http" title="Permanent link">&para;</a></h3>
 <pre class="highlight"><code class="language-python">from fawlty.client import SensuClient
 from fawlty.sensu_server import SensuServer
 import fawlty.resources
@@ -157,6 +181,24 @@ new_ns.create()
 # Get the list of all namespaces
 namespaces = fawlty.resources.namespace.Namespace.get(client=client)
 print(f"Namespaces: {namespaces})</code></pre>
+<h3 id="ssl_with_certificate_verification">SSL with Certificate Verification<a class="headerlink" href="#ssl_with_certificate_verification" title="Permanent link">&para;</a></h3>
+<pre class="highlight"><code class="language-python">from fawlty.client import SensuClient
+from fawlty.sensu_server import SensuServer
+
+# Connect to a server with a valid SSL certificate
+# (or a self-signed cert with CA installed in system certificate store)
+s = SensuServer(host="sensu.example.com", port=8080, use_ssl=True)
+client = SensuClient(server=s)
+client.login("basil", "fawlty")</code></pre>
+<h3 id="ssl_without_certificate_verification_development_only">SSL without Certificate Verification (Development Only)<a class="headerlink" href="#ssl_without_certificate_verification_development_only" title="Permanent link">&para;</a></h3>
+<pre class="highlight"><code class="language-python">from fawlty.client import SensuClient
+from fawlty.sensu_server import SensuServer
+
+# Connect to a server with SSL but skip certificate validation
+# WARNING: Only use this in development/testing environments
+s = SensuServer(host="localhost", port=8080, use_ssl=True, ignore_cert=True)
+client = SensuClient(server=s)
+client.login("basil", "fawlty")</code></pre>
               
             </div>
           </div><footer>
