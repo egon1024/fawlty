@@ -8,7 +8,7 @@ import pytest
 #with patch("fawlty.sensu_client.ValidationError", new_callable=MagicMock) as ValidationError:
 #    from pydantic import ValidationError as RealValidationError
 
-from fawlty.sensu_client import SensuClient, ValidationError
+from fawlty.sensu_client import SensuClient, ValidationError, get_system_ca_bundle
 from fawlty.sensu_token import SensuToken
 from fawlty.sensu_server import SensuServer
 
@@ -158,3 +158,73 @@ class TestResourceDelete:
         mock_make_call.return_value = MagicMock(status_code=204)
         obj = MagicMock()
         assert sensu_client.resource_delete(obj) is True
+
+
+class TestSSLConfiguration:
+    """Test SSL certificate handling in SensuClient"""
+
+    def test_ignore_cert_disabled_verification(self):
+        """When ignore_cert=True, SSL verification should be disabled"""
+        server = SensuServer(host="localhost", use_ssl=True, ignore_cert=True)
+        client = SensuClient(server=server)
+        assert client.session.verify is False
+
+    def test_use_ssl_with_system_ca_bundle(self):
+        """When use_ssl=True and ignore_cert=False, should use system CA bundle if available"""
+        server = SensuServer(host="localhost", use_ssl=True, ignore_cert=False)
+
+        with patch("fawlty.sensu_client.get_system_ca_bundle") as mock_get_ca:
+            mock_get_ca.return_value = "/etc/ssl/certs/ca-certificates.crt"
+            client = SensuClient(server=server)
+            assert client.session.verify == "/etc/ssl/certs/ca-certificates.crt"
+
+    def test_use_ssl_without_system_ca_bundle(self):
+        """When use_ssl=True and system CA bundle not found, should use default"""
+        server = SensuServer(host="localhost", use_ssl=True, ignore_cert=False)
+
+        with patch("fawlty.sensu_client.get_system_ca_bundle") as mock_get_ca:
+            mock_get_ca.return_value = None
+            client = SensuClient(server=server)
+            # Should remain as default (True)
+            assert client.session.verify is True
+
+    def test_no_ssl_no_verification(self):
+        """When use_ssl=False, verification settings shouldn't be modified"""
+        server = SensuServer(host="localhost", use_ssl=False, ignore_cert=False)
+        client = SensuClient(server=server)
+        # Should remain as default (True)
+        assert client.session.verify is True
+
+    def test_no_server(self):
+        """When no server is provided, verification should remain default"""
+        client = SensuClient(server=None)
+        assert client.session.verify is True
+
+
+class TestGetSystemCABundle:
+    """Test the get_system_ca_bundle helper function"""
+
+    def test_returns_env_var_path(self):
+        """Should prioritize environment variable paths"""
+        with patch.dict('os.environ', {'REQUESTS_CA_BUNDLE': '/custom/ca.crt'}):
+            with patch('os.path.isfile', return_value=True):
+                result = get_system_ca_bundle()
+                assert result == '/custom/ca.crt'
+
+    def test_returns_common_path(self):
+        """Should return first found common CA bundle path"""
+        def mock_isfile(path):
+            return path == '/etc/ssl/certs/ca-certificates.crt'
+
+        with patch.dict('os.environ', {}, clear=True):
+            with patch('os.path.isfile', side_effect=mock_isfile):
+                result = get_system_ca_bundle()
+                assert result == '/etc/ssl/certs/ca-certificates.crt'
+
+    def test_returns_none_when_not_found(self):
+        """Should return None when no CA bundle is found"""
+        with patch.dict('os.environ', {}, clear=True):
+            with patch('os.path.isfile', return_value=False):
+                with patch('ssl.create_default_context', side_effect=Exception("No SSL")):
+                    result = get_system_ca_bundle()
+                    assert result is None
